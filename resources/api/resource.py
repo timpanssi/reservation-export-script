@@ -84,6 +84,8 @@ class ResourceEquipmentSerializer(TranslatedModelSerializer):
     def to_representation(self, obj):
         # remove unnecessary nesting and aliases
         ret = super().to_representation(obj)
+        if not ret['data'] and obj.data:
+            ret['data'] = obj.data
         ret['name'] = ret['equipment']['name']
         ret['id'] = ret['equipment']['id']
         del ret['equipment']
