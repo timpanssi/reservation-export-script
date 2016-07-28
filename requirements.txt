@@ -24,6 +24,7 @@ django-jinja==2.2.0
 django-modeltranslation==0.11
 django-modeltranslation==0.11
 django-mptt==0.8.5
+django-rest-swagger==2.0.3
 Django==1.9.8             # via django-allauth, django-guardian, django-jinja, easy-thumbnails
 djangorestframework-jwt==1.8.0
 djangorestframework==3.4.0
@@ -37,6 +38,7 @@ Jinja2==2.8               # via django-jinja
 MarkupSafe==0.23          # via jinja2
 mccabe==0.5.1             # via flake8
 oauthlib==1.1.2           # via requests-oauthlib
+openapi-codec==1.0.0      # via django-rest-swagger
 pillow==3.3.0             # via easy-thumbnails
 pip-tools==1.7.0
 psycopg2==2.6.2
@@ -54,7 +56,7 @@ pyyaml==3.11
 requests-cache==0.4.12
 requests-oauthlib==0.6.2  # via django-allauth
 requests==2.10.0          # via coreapi, django-allauth, requests-cache, requests-oauthlib
-simplejson==3.8.2         # via uritemplate
+simplejson==3.8.2         # via django-rest-swagger, uritemplate
 six==1.10.0               # via django-appconf, django-guardian, fake-factory, pip-tools, python-dateutil
 uritemplate==0.6          # via coreapi
 XlsxWriter==0.9.3

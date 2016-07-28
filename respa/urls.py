@@ -19,7 +19,7 @@ from django.conf.urls.static import static
 from helusers import admin
 from django.utils.translation import ugettext_lazy
 
-from resources.api import RespaAPIRouter
+from resources.api import RespaAPIRouter, schema_view
 from resources.views.images import ResourceImageView
 from resources.views.ical import ICalFeedView
 from resources.views import testing as testing_views
@@ -35,6 +35,7 @@ urlpatterns = [
     url(r'^resource_image/(?P<pk>\d+)$', ResourceImageView.as_view(), name='resource-image-view'),
     url(r'^v1/', include(router.urls)),
     url(r'^v1/reservation/ical/(?P<ical_token>[-\w\d]+).ics$', ICalFeedView.as_view(), name='ical-feed'),
+    url(r'^v1/schema', schema_view),
 ]
 
 if settings.DEBUG:

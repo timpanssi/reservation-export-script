@@ -4,6 +4,7 @@ psycopg2
 -e git+https://github.com/City-of-Helsinki/munigeo#egg=django-munigeo
 coreapi
 djangorestframework
+django-rest-swagger
 django-filter
 django-grappelli
 pytest
