@@ -26,7 +26,7 @@ from resources.views import testing as testing_views
 
 admin.autodiscover()
 
-router = RespaAPIRouter()
+router = RespaAPIRouter(schema_title='Resource booking API')
 
 urlpatterns = [
     url(r'^admin/', include(admin.site.urls)),

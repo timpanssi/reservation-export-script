@@ -10,8 +10,11 @@ from rest_framework import routers
 
 
 class RespaAPIRouter(routers.DefaultRouter):
-    def __init__(self):
-        super(RespaAPIRouter, self).__init__()
+    def __init__(self, schema_title=None):
+        if schema_title:
+            super(RespaAPIRouter, self).__init__(schema_title=schema_title)
+        else:
+            super(RespaAPIRouter, self).__init__()
         self.registered_api_views = set()
         self._register_all_views()
         self.register("search", TypeaheadViewSet, base_name="search")
