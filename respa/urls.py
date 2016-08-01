@@ -24,9 +24,10 @@ from resources.views.images import ResourceImageView
 from resources.views.ical import ICalFeedView
 from resources.views import testing as testing_views
 
+
 admin.autodiscover()
 
-router = RespaAPIRouter(schema_title='Resource booking API')
+router = RespaAPIRouter()
 
 urlpatterns = [
     url(r'^admin/', include(admin.site.urls)),

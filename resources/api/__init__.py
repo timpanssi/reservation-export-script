@@ -7,12 +7,18 @@ from .search import TypeaheadViewSet
 from .equipment import EquipmentViewSet
 
 from rest_framework import routers
+from rest_framework.decorators import api_view, renderer_classes
+from rest_framework import response, schemas
+from rest_framework.renderers import CoreJSONRenderer
+from rest_framework_swagger.renderers import OpenAPIRenderer, SwaggerUIRenderer
+from rest_framework.reverse import reverse
 
 
 class RespaAPIRouter(routers.DefaultRouter):
-    def __init__(self, schema_title=None):
-        if schema_title:
-            super(RespaAPIRouter, self).__init__(schema_title=schema_title)
+    def __init__(self, schema_title=None, schema_url=None):
+        if schema_title or schema_url:
+            super(RespaAPIRouter, self).__init__(schema_title=schema_title,
+                                                 schema_url=schema_url)
         else:
             super(RespaAPIRouter, self).__init__()
         self.registered_api_views = set()
@@ -31,13 +37,10 @@ class RespaAPIRouter(routers.DefaultRouter):
         for view in users_views:
             self._register_view(view)
 
-from rest_framework.decorators import api_view, renderer_classes
-from rest_framework import response, schemas
-from rest_framework_swagger.renderers import OpenAPIRenderer, SwaggerUIRenderer
-
 
 @api_view()
-@renderer_classes([OpenAPIRenderer, SwaggerUIRenderer])
+@renderer_classes([CoreJSONRenderer, OpenAPIRenderer, SwaggerUIRenderer])
 def schema_view(request):
-    generator = schemas.SchemaGenerator(title='Bookings API')
+    generator = schemas.SchemaGenerator(title='Bookings API',
+                                        url=reverse('api-root'))
     return response.Response(generator.get_schema(request=request))
