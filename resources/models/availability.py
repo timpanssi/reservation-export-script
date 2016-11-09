@@ -144,6 +144,10 @@ class Period(models.Model):
 
     def clean(self, ignore_overlap=False):
         super(Period, self).clean()
+
+        if self.start > self.end:
+            raise ValidationError("Period must start before its end", code="invalid_date_range")
+
         self._validate_belonging()
         self._check_closed()
 
