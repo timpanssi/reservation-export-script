@@ -10,7 +10,7 @@ from django.db import transaction
 from django.db.models import Q
 
 from resources.models import Unit, UnitIdentifier
-from base import Importer, register_importer
+from .base import Importer, register_importer
 
 from raven import Client
 
@@ -114,8 +114,8 @@ def process_v2_periods(unit, unit_data):
 
     for period in unit_data['periods']:
 
-        if not period['start'] or not period['end']:
-            continue  # NOTE: period is supposed to have *at least* start or end date
+        if not period.get('start', False):
+            continue  # NOTE: period is supposed to have *at least* start
 
         #  start = datetime.datetime.strptime(period['start'], '%Y-%m-%d')
 
@@ -123,7 +123,7 @@ def process_v2_periods(unit, unit_data):
 
         if not period['end']:
             this_day = datetime.date.today()
-            end = datetime.date(this_day.year + 1, 12, 31)  # No end time goes to end of next year
+            end = str(datetime.date(this_day.year + 1, 12, 31))  # No end time goes to end of next year
         else:
             end = period['end']
 
@@ -144,7 +144,7 @@ def process_v2_periods(unit, unit_data):
                 opens = day['opens'] or None
                 closes = day['closes'] or None
                 active_period.days.create(
-                    weekday=day['day'],
+                    weekday=int(day['day']) - 1,
                     opens=opens,
                     closes=closes,
                     closed=day['closed']
@@ -153,6 +153,11 @@ def process_v2_periods(unit, unit_data):
                 print(e)
                 print(day)
                 raise ValidationError(e)
+
+        # TODO: automagic closing checker
+        # One day equals one period and share same closing state
+        active_period.closed = period.get('closed')
+        active_period.save()
 
 
 def timetable_fetcher(unit, start='2016-07-01', end='2016-12-31'):
