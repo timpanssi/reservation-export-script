@@ -5,6 +5,17 @@
 respa – Resource reservation and management service
 ===================
 
+Usage tips
+----------
+While we wait for real administration interface, here are some gotchas with managing Respa through the Django admin:
+
+Adding token authentication in admin:
+* locate an existing user or create a new new user
+* add auth token and choose the chosen user
+
+Interesting permissions for these users:
+* unit: can-view-reservation code
+
 Installation
 ------------
 
