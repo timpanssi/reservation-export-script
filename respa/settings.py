@@ -87,6 +87,7 @@ INSTALLED_APPS = [
     'caterings',
     'comments',
     'notifications.apps.NotificationsConfig',
+    'kulkunen',
 
     'respa_exchange',
     'respa_admin',
