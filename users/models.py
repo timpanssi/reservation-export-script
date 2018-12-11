@@ -5,6 +5,8 @@ from django.utils.translation import ugettext_lazy as _
 from django.conf import settings
 from resources.models import Resource
 
+from django_orghierarchy.models import Organization
+
 
 class User(AbstractUser):
     ical_token = models.SlugField(
@@ -31,6 +33,8 @@ class User(AbstractUser):
             "Designates whether the user is a General Administrator "
             "with special permissions to many objects within Respa. "
             "This is almost as powerful as superuser."))
+
+    organization = models.ForeignKey(Organization, default=None, null=True, blank=True)
 
     class Meta:
         ordering = ('id',)

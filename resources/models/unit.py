@@ -14,6 +14,7 @@ from .availability import get_opening_hours
 from .permissions import UNIT_PERMISSIONS
 
 from munigeo.models import Municipality
+from django_orghierarchy.models import Organization
 
 
 class UnitQuerySet(models.QuerySet):
@@ -72,6 +73,7 @@ class Unit(ModifiableModel, AutoIdentifiedModel):
                                                                       null=True, blank=True)
     reservable_min_days_in_advance = models.PositiveSmallIntegerField(verbose_name=_('Reservable min. days in advance'),
                                                                       null=True, blank=True)
+    organization = models.ForeignKey(Organization, default=None, null=True, blank=True)
 
     objects = UnitQuerySet.as_manager()
 
