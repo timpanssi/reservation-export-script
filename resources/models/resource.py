@@ -39,6 +39,8 @@ from .unit import Unit
 from .availability import get_opening_hours
 from .permissions import RESOURCE_GROUP_PERMISSIONS
 
+from django_orghierarchy.models import Organization
+
 
 def generate_access_code(access_code_type):
     if access_code_type == Resource.ACCESS_CODE_TYPE_NONE:

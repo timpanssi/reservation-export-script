@@ -95,6 +95,8 @@ INSTALLED_APPS = [
     'respa_admin',
 
     'sanitized_dump',
+
+    'django_orghierarchy',
 ]
 
 if env('SENTRY_DSN'):
