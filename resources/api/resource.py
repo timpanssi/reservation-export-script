@@ -55,6 +55,15 @@ def get_resource_reservations_queryset(begin, end):
     return qs
 
 
+class PurposeFilterSet(django_filters.FilterSet):
+
+    organization = django_filters.CharFilter(name='resource__unit__organization_id')
+
+    class Meta:
+        model = Purpose
+        fields = ('id',)
+
+
 class PurposeSerializer(TranslatedModelSerializer):
     class Meta:
         model = Purpose
@@ -65,6 +74,8 @@ class PurposeViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Purpose.objects.all()
     serializer_class = PurposeSerializer
     pagination_class = PurposePagination
+    filter_backends = (django_filters.rest_framework.DjangoFilterBackend,)
+    filter_class = PurposeFilterSet
 
     def get_queryset(self):
         if is_staff(self.request.user):
@@ -96,6 +107,7 @@ class ResourceTypeViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = ResourceTypeSerializer
     filter_backends = (django_filters.rest_framework.DjangoFilterBackend,)
     filter_class = ResourceTypeFilterSet
+
 
 register_view(ResourceTypeViewSet, 'type')
 
@@ -323,7 +335,7 @@ class ResourceFilterSet(django_filters.FilterSet):
                                       widget=django_filters.widgets.CSVWidget, distinct=True)
     available_between = django_filters.Filter(method='filter_available_between',
                                               widget=django_filters.widgets.CSVWidget)
-    organization = django_filters.CharFilter(name='unit__organization__id', lookup_expr='iexact')
+    organization = django_filters.CharFilter(name='unit__organization_id', lookup_expr='iexact')
 
     def filter_is_favorite(self, queryset, name, value):
         if not self.user.is_authenticated():

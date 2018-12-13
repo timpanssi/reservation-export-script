@@ -9,6 +9,7 @@ from resources.models import Unit
 class UnitFilterSet(django_filters.FilterSet):
     resource_group = django_filters.Filter(name='resources__groups__identifier', lookup_expr='in',
                                            widget=django_filters.widgets.CSVWidget, distinct=True)
+    organization = django_filters.CharFilter(name='organization_id', lookup_expr='iexact')
 
     class Meta:
         model = Unit
