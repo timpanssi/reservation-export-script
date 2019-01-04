@@ -1,13 +1,16 @@
+from django.utils.translation import ugettext_lazy as _
+from django.utils.module_loading import import_string
+from django.utils import timezone
+from django.core.exceptions import ImproperlyConfigured, ValidationError
+from django.http import HttpResponseRedirect
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import permissions, status
+from rest_framework import serializers
 from resources.models.resource import Resource
 from resources.api.resource import ResourceSerializer
 from respa_payments.models import Order, Sku
 from respa_payments import settings
-from rest_framework import serializers
-from django.utils.module_loading import import_string
-from django.utils import timezone
 
 
 class PaymentResourceSerializer(ResourceSerializer):
@@ -42,11 +45,8 @@ class OrderView(APIView):
             order = order.save()
             # unique = order.pk
             # verification_uuid = order.verification_uuid
-            payment = self.payment_integration(order)
-            if payment.is_valid():
-                response_data = payment.get_data()
-                return Response(response_data, status=status.HTTP_201_CREATED)
-            return Response(payment.errors, status=status.HTTP_400_BAD_REQUEST)
+            payment = self.payment_integration(order=order)
+            return Response(payment.get_data(), status=status.HTTP_201_CREATED)
         return Response(order.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
@@ -56,16 +56,27 @@ class CompleteOrderView(APIView):
     def __init__(self):
         self.payment_integration = import_string(settings.INTEGRATION_CLASS)
 
-    def post(self, request):
-        order_data = request.data['order']
+    def get(self, request):
+        self.order_id = request.GET.get('id')
+        self.verification_code = request.GET.get('verification_code')
+        self.payment = self.payment_integration(callback_request=request)
+        self.callback_data = self.payment.get_callback_data()
+        if self.validate():
+            return HttpResponseRedirect(self.callback_data.get('redirect_url') + '?code=' + self.verification_code)
+        # return HttpResponseRedirect(self.callback_data.get('redirect_url'))
+
+    def validate(self):
         try:
-            order = Order.objects.get(pk=order_data['id'])
-            order.order_process_success = order_data.get('success') or timezone.now()
-            order.order_process_failure = order_data.get('failure')
-        except:
-            return Response(status=status.HTTP_400_BAD_REQUEST)
-        order = OrderSerializer(order, data=order_data, partial=True)
+            order = Order.objects.get(pk=self.order_id, verification_code=self.verification_code)
+        except Exception as e:
+            raise ValidationError(_(e))
+
+        payment_integration_response = self.payment.is_valid()
+        if not payment_integration_response:
+            raise ValidationError(_('The payment did not validate.'))
+
+        order = OrderSerializer(order, data=self.callback_data, partial=True)
         if order.is_valid():
             order.save()
-            return Response(order.data, status=status.HTTP_201_CREATED)
-        return Response(order.errors, status=status.HTTP_400_BAD_REQUEST)
+            return True
+        raise ValidationError(_('The payment did not validate.'))

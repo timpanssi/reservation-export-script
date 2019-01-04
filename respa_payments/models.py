@@ -24,7 +24,7 @@ class Sku(ModifiableModel):
 class Order(ModifiableModel):
     sku = models.ForeignKey(Sku, db_index=True, null=True, on_delete=models.SET_NULL)
     order_code = models.CharField(verbose_name=_('Order code'), max_length=32)
-    verification_uuid = models.CharField(verbose_name=_('Verification code'), max_length=40, null=False,
+    verification_code = models.CharField(verbose_name=_('Verification code'), max_length=40, null=False,
                                          blank=True, default='foo')
     reserver_name = models.CharField(verbose_name=_('Reserver name'), max_length=100, blank=True)
     reserver_email_address = models.EmailField(verbose_name=_('Reserver email address'), blank=True)
