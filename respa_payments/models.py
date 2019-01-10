@@ -2,6 +2,7 @@ from django.db import models
 from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
 from resources.models.base import ModifiableModel
+from resources.models.reservation import Reservation
 from resources.models.resource import DurationSlot
 
 
@@ -23,16 +24,9 @@ class Sku(ModifiableModel):
 
 class Order(ModifiableModel):
     sku = models.ForeignKey(Sku, db_index=True, null=True, on_delete=models.SET_NULL)
-    order_code = models.CharField(verbose_name=_('Order code'), max_length=32)
+    reservation = models.OneToOneField(Reservation, db_index=True, null=True, on_delete=models.SET_NULL,)
     verification_code = models.CharField(verbose_name=_('Verification code'), max_length=40, null=False,
                                          blank=True, default='foo')
-    reserver_name = models.CharField(verbose_name=_('Reserver name'), max_length=100, blank=True)
-    reserver_email_address = models.EmailField(verbose_name=_('Reserver email address'), blank=True)
-    reserver_phone_number = models.CharField(verbose_name=_('Reserver phone number'), max_length=30, blank=True)
-    reserver_address_street = models.CharField(verbose_name=_('Reserver address street'), max_length=100, blank=True)
-    reserver_address_zip = models.CharField(verbose_name=_('Reserver address zip'), max_length=30, blank=True)
-    reserver_address_city = models.CharField(verbose_name=_('Reserver address city'), max_length=100, blank=True)
-    product_name = models.CharField(verbose_name=_('Product name'), max_length=100, blank=True)
     order_process_started = models.DateTimeField(verbose_name=_('Order process started'), default=timezone.now)
     order_process_success = models.DateTimeField(verbose_name=_('Order process success'), blank=True, null=True)
     order_process_failure = models.DateTimeField(verbose_name=_('Order process failure'), blank=True, null=True)

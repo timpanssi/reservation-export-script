@@ -39,32 +39,32 @@ class PaytrailE2Integration(PaymentIntegration):
             'PAYER_PERSON_ADDR_POSTAL_CODE,'
             'PAYER_PERSON_ADDR_TOWN')
 
-    def construct_post_data(self):
-        super(PaytrailE2Integration, self).construct_post_data()
+    def construct_order_post(self, order):
+        super(PaytrailE2Integration, self).construct_order_post(order)
         data = {
             'MERCHANT_AUTH_HASH': self.merchant_auth_hash,
             'MERCHANT_ID': self.merchant_id,
             'URL_SUCCESS': self.url_success,
             'URL_CANCEL': self.url_cancel,
             'URL_NOTIFY': self.url_notify,
-            'ORDER_NUMBER': self.order.payment_service_order_number,
+            'ORDER_NUMBER': order.payment_service_order_number,
             'PARAMS_IN': self.params_in,
             'PARAMS_OUT': self.params_out,
             'PAYMENT_METHODS': self.payment_methods,
-            'ITEM_TITLE[0]': self.order.product_name,
-            'ITEM_ID[0]': self.order.pk,
+            'ITEM_TITLE[0]': order.sku.name,
+            'ITEM_ID[0]': order.pk,
             'ITEM_QUANTITY[0]': 1,
-            'ITEM_UNIT_PRICE[0]': self.order.sku.price,
-            'ITEM_VAT_PERCENT[0]': self.order.sku.vat,
+            'ITEM_UNIT_PRICE[0]': order.sku.price,
+            'ITEM_VAT_PERCENT[0]': order.sku.vat,
             'ITEM_DISCOUNT_PERCENT[0]': 0,
             'ITEM_TYPE[0]': 1,
-            'PAYER_PERSON_PHONE': self.order.reserver_phone_number,
-            'PAYER_PERSON_EMAIL': self.order.reserver_email_address,
-            'PAYER_PERSON_FIRSTNAME': self.order.reserver_name,
-            'PAYER_PERSON_LASTNAME': self.order.reserver_name,
-            'PAYER_PERSON_ADDR_STREET': self.order.reserver_address_street,
-            'PAYER_PERSON_ADDR_POSTAL_CODE': self.order.reserver_address_zip,
-            'PAYER_PERSON_ADDR_TOWN': self.order.reserver_address_city,
+            'PAYER_PERSON_PHONE': order.reservation.reserver_phone_number,
+            'PAYER_PERSON_EMAIL': order.reservation.reserver_email_address,
+            'PAYER_PERSON_FIRSTNAME': order.reservation.reserver_name,
+            'PAYER_PERSON_LASTNAME': order.reservation.reserver_name,
+            'PAYER_PERSON_ADDR_STREET': order.reservation.reserver_address_street,
+            'PAYER_PERSON_ADDR_POSTAL_CODE': order.reservation.reserver_address_zip,
+            'PAYER_PERSON_ADDR_TOWN': order.reservation.reserver_address_city,
         }
 
         auth_code = data['MERCHANT_AUTH_HASH'] + '|' + \
@@ -97,17 +97,17 @@ class PaytrailE2Integration(PaymentIntegration):
         query_string = urllib.parse.urlencode(data, doseq=True)
         return {'redirect_url': self.api_url + '?' + query_string}
 
-    def construct_callback_data(self):
-        super(PaytrailE2Integration, self).construct_callback_data()
-        self.callback_data = {
-            **self.callback_data,
+    def construct_payment_callback(self):
+        callback = super(PaytrailE2Integration, self).construct_payment_callback()
+        callback_data = {
+            **callback,
             'payment_service_order_number': self.request.GET.get('ORDER_NUMBER', None),
             'payment_service_timestamp': self.request.GET.get('TIMESTAMP', None),
             'payment_service_paid': self.request.GET.get('PAID', None),
             'payment_service_method': self.request.GET.get('METHOD', None),
             'payment_service_return_authcode': self.request.GET.get('RETURN_AUTHCODE', None),
         }
-        return self.callback_data
+        return callback_data
 
     def is_valid(self):
         is_valid = super(PaytrailE2Integration, self).is_valid()

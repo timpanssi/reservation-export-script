@@ -39,9 +39,7 @@ class OrderPostView(APIView):
         self.payment_integration = import_string(settings.INTEGRATION_CLASS)
 
     def post(self, request):
-        payment = self.payment_integration(request=request)
-        payment.save_post_data()
-        return Response(payment.post_data, status=status.HTTP_201_CREATED)
+        return self.payment_integration(request=request).post()
 
 
 class OrderCallbackView(APIView):
@@ -51,8 +49,4 @@ class OrderCallbackView(APIView):
         self.payment_integration = import_string(settings.INTEGRATION_CLASS)
 
     def get(self, request):
-        payment = self.payment_integration(request=request)
-        payment.save_callback_data()
-        if payment.is_valid():
-            return HttpResponseRedirect(payment.callback_data.get('redirect_url') + '?code=' + payment.order.verification_code)
-        return HttpResponseRedirect(payment.callback_data.get('redirect_url') + '?errors=' + str(payment.order_serializer.errors))
+        return self.payment_integration(request=request).get()
