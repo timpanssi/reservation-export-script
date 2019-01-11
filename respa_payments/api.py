@@ -39,7 +39,7 @@ class OrderPostView(APIView):
         self.payment_integration = import_string(settings.INTEGRATION_CLASS)
 
     def post(self, request):
-        return self.payment_integration(request=request).post()
+        return self.payment_integration(request=request).order_post()
 
 
 class OrderCallbackView(APIView):
@@ -49,4 +49,4 @@ class OrderCallbackView(APIView):
         self.payment_integration = import_string(settings.INTEGRATION_CLASS)
 
     def get(self, request):
-        return self.payment_integration(request=request).get()
+        return self.payment_integration(request=request).payment_callback()

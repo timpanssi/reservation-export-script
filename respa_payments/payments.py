@@ -19,12 +19,6 @@ class PaymentIntegration(object):
         self.url_cancel = settings.URL_CANCEL
         self.url_redirect_callback = settings.URL_REDIRECT_CALLBACK
 
-    def post(self):
-        return self.order_post()
-
-    def get(self):
-        return self.payment_callback()
-
     def construct_order_post(self, order):
         self.url_success = '{}?id={}&verification_code={}'.format(
             settings.URL_SUCCESS, order.pk, order.verification_code)
@@ -59,7 +53,8 @@ class PaymentIntegration(object):
             if order_serializer.is_valid():
                 order_serializer.save()
                 return HttpResponseRedirect(callback_data.get('redirect_url') + '?code=' + order.verification_code)
-        return HttpResponseRedirect(callback_data.get('redirect_url') + '?errors=' + str(order_serializer.errors))
+            return HttpResponseRedirect(callback_data.get('redirect_url') + '?errors=' + str(order_serializer.errors))
+        return HttpResponseRedirect(callback_data.get('redirect_url') + '?errors=[\'Requested order is not valid.\']')
 
     def is_valid(self):
         return True
