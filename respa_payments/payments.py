@@ -21,8 +21,8 @@ class PaymentIntegration(object):
 
     def construct_order_post(self, order):
         self.url_success = '{}?id={}&verification_code={}'.format(
-            settings.URL_SUCCESS, order.pk, order.verification_code)
-        return OrderSerializer(order).data
+            settings.URL_SUCCESS, order.get('id', None), order.get('verification_code', None))
+        return order
 
     def construct_payment_callback(self):
         callback_data = {
@@ -32,10 +32,11 @@ class PaymentIntegration(object):
         return callback_data
 
     def order_post(self):
-        order_serializer = OrderSerializer(data={'reservation': self.request.data.get('id', None), 'sku': 1})
+        order_serializer = OrderSerializer(data={'reservation': self.request.data.get(
+            'reservation_id', None), 'sku': self.request.data.get('sku_id', None)})
         if order_serializer.is_valid():
             order = order_serializer.save()
-            post_data = self.construct_order_post(order)
+            post_data = self.construct_order_post(OrderSerializer(order).data)
             return Response(post_data, status=status.HTTP_201_CREATED)
         return Response(order_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -52,10 +53,13 @@ class PaymentIntegration(object):
         if self.is_valid():
             if order_serializer.is_valid():
                 order_serializer.save()
-                return HttpResponseRedirect(callback_data.get('redirect_url') + '?code=' + order.verification_code)
+                return HttpResponseRedirect(callback_data.get('redirect_url') + 'reservation?id={}&resource={}&code={}'.format(
+                    order.id,
+                    order.reservation.resource.id,
+                    order.verification_code
+                ))
             return HttpResponseRedirect(callback_data.get('redirect_url') + '?errors=' + str(order_serializer.errors))
         return HttpResponseRedirect(callback_data.get('redirect_url') + '?errors=[\'Requested order is not valid.\']')
 
     def is_valid(self):
         return True
-        

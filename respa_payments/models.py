@@ -7,7 +7,7 @@ from resources.models.resource import DurationSlot
 
 
 class Sku(ModifiableModel):
-    duration_slot = models.ForeignKey(DurationSlot, db_index=True, null=True, on_delete=models.SET_NULL)
+    duration_slot = models.ForeignKey(DurationSlot, related_name='skus', db_index=True, null=True, on_delete=models.SET_NULL)
     price = models.DecimalField(verbose_name=_('Price'), max_digits=6, decimal_places=2, default=0.00)
     vat = models.DecimalField(verbose_name=_('VAT'), max_digits=6, decimal_places=2, default=24.00)
     name = models.CharField(verbose_name=_('Name'), max_length=200)
