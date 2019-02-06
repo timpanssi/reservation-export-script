@@ -1,3 +1,4 @@
+import uuid
 from django.utils.translation import ugettext_lazy as _
 from django.core.exceptions import ImproperlyConfigured, ValidationError
 from django.utils import timezone
@@ -33,7 +34,7 @@ class PaymentIntegration(object):
 
     def order_post(self):
         order_serializer = OrderSerializer(data={'reservation': self.request.data.get(
-            'reservation_id', None), 'sku': self.request.data.get('sku_id', None)})
+            'reservation_id', None), 'sku': self.request.data.get('sku_id', None), 'verification_code': str(uuid.uuid4())})
         if order_serializer.is_valid():
             order = order_serializer.save()
             post_data = self.construct_order_post(OrderSerializer(order).data)

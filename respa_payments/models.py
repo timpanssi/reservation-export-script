@@ -26,7 +26,7 @@ class Order(ModifiableModel):
     sku = models.ForeignKey(Sku, db_index=True, null=True, on_delete=models.SET_NULL)
     reservation = models.OneToOneField(Reservation, db_index=True, null=True, on_delete=models.SET_NULL,)
     verification_code = models.CharField(verbose_name=_('Verification code'), max_length=40, null=False,
-                                         blank=True, default='foo')
+                                         blank=True, default='')
     order_process_started = models.DateTimeField(verbose_name=_('Order process started'), default=timezone.now)
     order_process_success = models.DateTimeField(verbose_name=_('Order process success'), blank=True, null=True)
     order_process_failure = models.DateTimeField(verbose_name=_('Order process failure'), blank=True, null=True)
