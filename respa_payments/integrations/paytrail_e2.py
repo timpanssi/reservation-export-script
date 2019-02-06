@@ -12,7 +12,6 @@ class PaytrailE2Integration(PaymentIntegration):
         super(PaytrailE2Integration, self).__init__(**kwargs)
         self.merchant_id = settings.MERCHANT_ID
         self.merchant_auth_hash = settings.MERCHANT_AUTH_HASH
-        self.complete_redirect_url = settings.FRONTEND_URL
         self.payment_methods = '1,2,3,5,6,10,50,51,52,61'
         self.params_out = 'PAYMENT_ID,TIMESTAMP,STATUS'
         self.params_in = (
