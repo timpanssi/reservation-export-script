@@ -265,6 +265,10 @@ RESPA_DOCX_TEMPLATE = os.path.join(BASE_DIR, 'reports', 'data', 'default.docx')
 RESPA_ADMIN_USERNAME_LOGIN = env.bool(
     'RESPA_ADMIN_USERNAME_LOGIN', default=True)
 
+
+RESPA_RESOURCES_RESOURCE_SERIALIZER_CLASS = 'respa_payments.api.PaymentResourceSerializer'
+RESPA_RESOURCES_RESOURCE_DETAILS_SERIALIZER_CLASS = 'respa_payments.api.PaymentResourceDetailsSerializer'
+
 # local_settings.py can be used to override environment-specific settings
 # like database and email that differ between development and production.
 local_settings_path = os.path.join(BASE_DIR, "local_settings.py")
