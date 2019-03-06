@@ -7,6 +7,7 @@ import pytz
 from arrow.parser import ParserError
 
 from django import forms
+from django.conf import settings
 from django.db.models import Prefetch, Q
 from django.urls import reverse
 from django.utils.module_loading import import_string
