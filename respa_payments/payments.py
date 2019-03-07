@@ -52,7 +52,7 @@ class PaymentIntegration(object):
             return HttpResponseRedirect(callback_data.get('redirect_url') + 'requested-order-not-valid')
 
         order_serializer = OrderSerializer(order, data=callback_data)
-        if order_serializer.is_valid() and order_serializer.data['payment_service_success']:
+        if order_serializer.is_valid() and callback_data.get('payment_service_success', False):
             reservation.state = Reservation.CONFIRMED
             reservation.save()
             order_serializer.save()
@@ -62,9 +62,12 @@ class PaymentIntegration(object):
             reservation.save()
             order.order_process_failure = timezone.now()
             order.order_process_log = str(order_serializer.errors)
-            if not order_serializer.data['payment_service_success']:
+            if not callback_data.get('payment_service_success', False):
                 order.order_process_log = 'Payment cancelled.'
             order.save()
+            return HttpResponseRedirect(callback_data.get('redirect_url') + 'resources/{}'.format(
+                order.reservation.resource.id,
+            ))
         return HttpResponseRedirect(callback_data.get('redirect_url') + 'reservation?id={}&reservation={}&resource={}'.format(
             order.id,
             order.reservation.id,
