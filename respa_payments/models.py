@@ -33,9 +33,8 @@ class Order(ModifiableModel):
         verbose_name=_('Order process log'), blank=True, null=True
     )
     payment_service_timestamp = models.DateTimeField(verbose_name=_('Payment service timestamp'), blank=True, null=True)
-    payment_service_amount = models.CharField(
-        verbose_name=_('Payment service amount'), max_length=100, blank=True, null=True
-    )
+    payment_service_amount = models.DecimalField(max_digits=10, decimal_places=2,
+                                                 verbose_name=_('Payment service amount'), default=0)
     payment_service_currency = models.CharField(
         verbose_name=_('Payment service currency'), max_length=100, blank=True, null=True
     )
