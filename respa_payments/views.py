@@ -30,6 +30,6 @@ class PaymentListView(ListView):
         if self.filter_start:
             qs = qs.filter(order_process_started__gte=datetime.datetime.strptime(self.filter_start, '%d.%m.%Y'))
         if self.filter_end:
-            qs = qs.filter(order_process_started__lte=datetime.datetime.strptime(self.filter_end, '%d.%m.%Y') 
+            qs = qs.filter(order_process_started__lte=datetime.datetime.strptime(self.filter_end, '%d.%m.%Y')
                            + datetime.timedelta(days=1))
         return qs
