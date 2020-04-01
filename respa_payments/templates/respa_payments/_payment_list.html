@@ -48,7 +48,8 @@
         <table class='table'>
             <thead>
                 <tr>
-                    <th scope="col">{% trans 'Date' %}</th>
+                    <th scope="col">{% trans 'Created' %}</th>
+                    <th scope="col">{% trans 'Period' %}</th>
                     <th scope="col">{% trans 'Status' %}</th>
                     <th scope="col">{% trans 'Name' %}</th>
                     <th scope="col">{% trans 'Email' %}</th>
@@ -62,6 +63,7 @@
                 {% for payment in payments %}
                     <tr>
                         <th scope="row">{{ payment.order_process_started|date:"d.m.Y"|default:"-"  }}</th>
+                        <td>{{ payment.reservation.begin|date:"d.m.Y" }}-{{ payment.reservation.end|date:"d.m.Y" }}</td>
                         <td>{{ payment.payment_service_status|default:"-"|lower }}</td>
                         <td>{{ payment.reservation.reserver_name|default:"-" }}</td>
                         <td>{{ payment.reservation.reserver_email_address|default:"-" }}</td>

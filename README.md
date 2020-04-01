@@ -132,6 +132,14 @@ cat <name_of_the_sanitized_respa_dump>.sql | docker exec -i respa-db psql -U pos
 
 Try: http://localhost:8000/ra/resource/
 
+Installing Yarn and building Respa Admin statics in a container:
+
+`curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | sudo apt-key add -`
+`echo "deb https://dl.yarnpkg.com/debian/ stable main" | tee /etc/apt/sources.list.d/yarn.list`
+`apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 23E7166788B63E1E`
+`apt update && apt install yarn`
+`./build-resources`
+
 Production considerations
 -------------------------
 
