@@ -2,6 +2,7 @@
 import logging
 import datetime
 import pytz
+import time
 
 from django.utils import timezone
 import django.contrib.postgres.fields as pgfields
@@ -22,8 +23,10 @@ from .resource import generate_access_code, validate_access_code
 from .resource import Resource, DurationSlot
 from .utils import (
     get_dt, save_dt, is_valid_time_slot, humanize_duration, send_respa_mail,
-    DEFAULT_LANG, localize_datetime, format_dt_range, build_reservations_ical_file
+    DEFAULT_LANG, localize_datetime, format_dt_range, build_reservations_ical_file,
 )
+from ..views.receipt import render_pdf_receipt_view
+from respa_payments.integrations.paytrail_e2_utils import generate_order_number
 
 DEFAULT_TZ = pytz.timezone(settings.TIME_ZONE)
 
@@ -377,6 +380,24 @@ class Reservation(ModifiableModel):
 
         return context
 
+    def get_receipt_context(self):
+        order_number = generate_order_number('VARAUS', self.resource.name, self.order.id)
+        reservation_period = '{0} - {1}'.format(
+            self.begin.strftime('%d.%m.%Y %H:%M'),
+            self.end.strftime('%d.%m.%Y %H:%M')
+        )
+        context = {
+            'timestamp': time.strftime('%d.%m.%Y %H:%M'),
+            'reservation_name': self.resource.name,
+            'reservation_period': reservation_period,
+            'payment_price': '{0} euroa'.format(self.order.sku.price),
+            'payment_vat': '{0} %'.format(self.order.sku.vat),
+            'payment_success_time': self.order.order_process_success.strftime('%d.%m.%Y %H:%M'),
+            'reserver_name': self.user,
+            'reference_number': order_number,
+        }
+        return context
+      
     def send_reservation_mail(self, notification_type, user=None, attachments=None, bcc_list=None):
         """
         Stuff common to all reservation related mails.
@@ -432,10 +453,20 @@ class Reservation(ModifiableModel):
         ical_file = build_reservations_ical_file(reservations)
         attachment = ('reservation.ics', ical_file, 'text/calendar')
 
+        pdf_receipt = None
+        bcc_list = None
+
+        if self.order and self.order.order_process_success:
+            pdf_name = 'varaamo_kuitti_{0}.pdf'.format(time.strftime('%Y-%m-%d'))
+            receipt_context = self.get_receipt_context()
+            receipt = render_pdf_receipt_view(receipt_context)
+            pdf_receipt = (pdf_name, receipt, 'application/pdf')
+
         if self.resource.recipients.count() > 0:
             bcc_list = self.resource.recipients.values_list('email', flat=True)
+            
         self.send_reservation_mail(NotificationType.RESERVATION_CONFIRMED,
-                                   attachments=[attachment],
+                                   attachments=[attachment, pdf_receipt],
                                    bcc_list=bcc_list)
 
     def send_reservation_cancelled_mail(self):

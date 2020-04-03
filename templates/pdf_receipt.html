@@ -1,0 +1,49 @@
+{% load i18n %}
+<!doctype html>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <title>{% block head_title %}{% endblock %}</title>
+  <style>
+    @page {
+      size: a4 portrait;
+
+      @frame header_frame {
+        -pdf-frame-content: header_content;
+        left: 60pt;
+        width: 512pt;
+        top: 50pt;
+        height: 40pt;
+      }
+
+      @frame content_frame {
+        left: 60pt;
+        width: 490pt;
+        top: 110pt;
+        height: 632pt;
+      }
+    }
+
+    html,
+    body {
+      font-family: sans-serif;
+      font-size: 11pt;
+      line-height: 14pt;
+    }
+  </style>
+</head>
+
+<body>
+  <h2>Varaukset Hämeenlinna kuitti, {{ timestamp }}</h2>
+
+  <p>Varaajan nimi: {{ reserver_name }}</p>
+  <p>Varauksen kohde: {{ reservation_name }}</p>
+  <p>Varaus tehty ajalle: {{ reservation_period }}</p>
+  <p>Varauksen hinta: {{ payment_price }}</p>
+  <p>Arvonlisävero: {{ payment_vat }}</p>
+  <p>Maksuajankohta: {{ payment_success_time }}</p>
+  <p>Maksun viite: {{ order_number }}</p>
+</body>
+
+</html>

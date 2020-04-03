@@ -1,5 +1,4 @@
 import re
-import unicodedata
 import urllib
 from datetime import datetime
 from hashlib import sha256
@@ -7,6 +6,7 @@ from django.utils.translation import ugettext_lazy as _
 from django.core.exceptions import ValidationError
 from respa_payments.payments import PaymentIntegration
 from respa_payments import settings, models
+from paytrail_e2_utils import generate_order_number, unicode_to_paytrail
 
 
 class PaytrailE2Integration(PaymentIntegration):
@@ -41,9 +41,6 @@ class PaytrailE2Integration(PaymentIntegration):
             'PAYER_PERSON_ADDR_POSTAL_CODE,'
             'PAYER_PERSON_ADDR_TOWN')
 
-    def unicode_to_paytrail(self, string):
-        return str(unicodedata.normalize('NFD', string).encode('ascii', 'ignore'), 'utf-8')
-
     def construct_order_post(self, order_dict):
         super(PaytrailE2Integration, self).construct_order_post(order_dict)
         order = models.Order.objects.get(pk=order_dict.get('id'))
@@ -57,8 +54,8 @@ class PaytrailE2Integration(PaymentIntegration):
             'PARAMS_IN': self.params_in,
             'PARAMS_OUT': self.params_out,
             'PAYMENT_METHODS': self.payment_methods,
-            'ORDER_NUMBER': self.service + '+' + resource_name + '+' + str(order_dict.get('id', '')),
-            'ITEM_TITLE[0]': self.unicode_to_paytrail(order_dict.get('product', '')),
+            'ORDER_NUMBER': generate_order_number(self.service, resource_name, order_dict.get('id')),
+            'ITEM_TITLE[0]': unicode_to_paytrail(order_dict.get('product', '')),
             'ITEM_ID[0]': order_dict.get('product_id', ''),
             'ITEM_QUANTITY[0]': 1,
             'ITEM_UNIT_PRICE[0]': order_dict.get('price', ''),
