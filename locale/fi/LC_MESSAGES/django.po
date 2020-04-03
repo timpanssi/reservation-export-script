@@ -682,6 +682,13 @@ msgid ""
 "elsewhere"
 msgstr "Ulkoisen varausjärjestelmän osoite jos tätä resurssia hallitaan muualla"
 
+msgid "Recipients"
+msgstr "Vastaanottajat"
+
+msgid "Users to receive emails from confirmed reservations"
+msgstr ""
+"Käyttäjät, joille lähetetään sähköpostiviesti hyväksytyistä varauksista"
+
 msgid "resource"
 msgstr "resurssi"
 
@@ -979,6 +986,11 @@ msgstr "Sähköposti ilmoitukset"
 
 msgid "A notification will be sent when a space is booked."
 msgstr "Ilmoitus lähetetään, kun tilaa varataan."
+
+msgid ""
+"Hold down Ctrl (Windows) or Command (Mac) button to select multiple options"
+msgstr ""
+"Pidä Ctrl-nappi (Windows) tai Command-nappi (Mac) pohjassa valitaksesi useita"
 
 msgid "Choose from the list below"
 msgstr "Valitse allaolevasta listasta"

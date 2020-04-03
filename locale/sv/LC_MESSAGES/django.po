@@ -679,6 +679,12 @@ msgid ""
 "elsewhere"
 msgstr "En URL till ett externt bokningssystem om den här resursen hanteras annorstädes"
 
+msgid "Recipients"
+msgstr "Mottagare"
+
+msgid "Users to receive emails from confirmed reservations"
+msgstr "Användare som ett e-postmeddelande skickas om godkända bokningar"
+
 msgid "resource"
 msgstr "resurs"
 
@@ -977,6 +983,12 @@ msgstr "E-post notifikationer"
 
 msgid "A notification will be sent when a space is booked."
 msgstr "Ett meddelande kommer att skickas då ett utrymme har bokats."
+
+msgid ""
+"Hold down Ctrl (Windows) or Command (Mac) button to select multiple options"
+msgstr ""
+"Håll ned Ctrl-tangenten (Windows) eller Kommandotangenten (Mac) för att "
+"välja flera"
 
 msgid "Choose from the list below"
 msgstr "Välj från listan nedan"

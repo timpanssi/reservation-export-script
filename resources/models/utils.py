@@ -101,7 +101,7 @@ def humanize_duration(duration):
 notification_logger = logging.getLogger('respa.notifications')
 
 
-def send_respa_mail(email_address, subject, body, html_body=None, attachments=None):
+def send_respa_mail(email_address, subject, body, html_body=None, attachments=None, bcc_list=None):
     if not getattr(settings, 'RESPA_MAILS_ENABLED', False):
         return
 
@@ -111,7 +111,14 @@ def send_respa_mail(email_address, subject, body, html_body=None, attachments=No
     notification_logger.info('Sending notification email to %s: "%s"' % (email_address, subject))
 
     text_content = body
-    msg = EmailMultiAlternatives(subject, text_content, from_address, [email_address], attachments=attachments)
+    msg = EmailMultiAlternatives(
+        subject,
+        text_content,
+        from_address,
+        [email_address],
+        attachments=attachments,
+        bcc=bcc_list
+    )
     if html_body:
         msg.attach_alternative(html_body, 'text/html')
     msg.send()

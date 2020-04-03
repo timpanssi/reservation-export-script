@@ -377,7 +377,7 @@ class Reservation(ModifiableModel):
 
         return context
 
-    def send_reservation_mail(self, notification_type, user=None, attachments=None):
+    def send_reservation_mail(self, notification_type, user=None, attachments=None, bcc_list=None):
         """
         Stuff common to all reservation related mails.
 
@@ -410,7 +410,8 @@ class Reservation(ModifiableModel):
             rendered_notification['subject'],
             rendered_notification['body'],
             rendered_notification['html_body'],
-            attachments
+            attachments,
+            bcc_list
         )
 
     def send_reservation_requested_mail(self):
@@ -430,8 +431,12 @@ class Reservation(ModifiableModel):
         reservations = [self]
         ical_file = build_reservations_ical_file(reservations)
         attachment = ('reservation.ics', ical_file, 'text/calendar')
+
+        if self.resource.recipients.count() > 0:
+            bcc_list = self.resource.recipients.values_list('email', flat=True)
         self.send_reservation_mail(NotificationType.RESERVATION_CONFIRMED,
-                                   attachments=[attachment])
+                                   attachments=[attachment],
+                                   bcc_list=bcc_list)
 
     def send_reservation_cancelled_mail(self):
         self.send_reservation_mail(NotificationType.RESERVATION_CANCELLED)
