@@ -44,7 +44,7 @@ class PaytrailE2Integration(PaymentIntegration):
     def construct_order_post(self, order_dict):
         super(PaytrailE2Integration, self).construct_order_post(order_dict)
         order = models.Order.objects.get(pk=order_dict.get('id'))
-        resource_name = unicode_to_paytrail(order.sku.duration_slot.resource.name)
+        resource_name = order.sku.duration_slot.resource.name
         data = {
             'MERCHANT_AUTH_HASH': self.merchant_auth_hash,
             'MERCHANT_ID': self.merchant_id,
