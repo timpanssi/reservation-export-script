@@ -101,7 +101,7 @@ def humanize_duration(duration):
 notification_logger = logging.getLogger('respa.notifications')
 
 
-def send_respa_mail(email_address, subject, body, html_body=None, attachments=None, bcc_list=None):
+def send_respa_mail(email_address, subject, body, html_body=None, attachments=None, bcc_list=[]):
     if not getattr(settings, 'RESPA_MAILS_ENABLED', False):
         return
 
