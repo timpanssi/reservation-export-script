@@ -454,7 +454,7 @@ class Reservation(ModifiableModel):
         attachment = ('reservation.ics', ical_file, 'text/calendar')
 
         pdf_receipt = None
-        bcc_list = None
+        bcc_list = []
 
         if self.order and self.order.order_process_success:
             pdf_name = 'varaamo_kuitti_{0}.pdf'.format(time.strftime('%Y-%m-%d'))
