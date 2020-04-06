@@ -398,7 +398,7 @@ class Reservation(ModifiableModel):
         }
         return context
       
-    def send_reservation_mail(self, notification_type, user=None, attachments=None, bcc_list=None):
+    def send_reservation_mail(self, notification_type, user=None, attachments=None, bcc_list=[]):
         """
         Stuff common to all reservation related mails.
 
