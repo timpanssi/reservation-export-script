@@ -456,7 +456,7 @@ class Reservation(ModifiableModel):
         attachments.append(calendar_attachment)
         bcc_list = None
         
-        if self.order and self.order.order_process_success:
+        if self.order and self.order.payment_service_success:
             pdf_name = 'varaamo_kuitti_{0}.pdf'.format(time.strftime('%Y-%m-%d'))
             receipt_context = self.get_receipt_context()
             receipt = render_pdf_receipt_view(receipt_context)
