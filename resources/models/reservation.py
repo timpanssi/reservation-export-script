@@ -393,8 +393,8 @@ class Reservation(ModifiableModel):
             'payment_price': '{0} euroa'.format(self.order.sku.price),
             'payment_vat': '{0} %'.format(self.order.sku.vat),
             'payment_success_time': self.order.order_process_success.strftime('%d.%m.%Y %H:%M'),
-            'reserver_name': self.user,
-            'reference_number': order_number,
+            'reserver_name': self.reserver_name,
+            'order_number': order_number,
         }
         return context
       
