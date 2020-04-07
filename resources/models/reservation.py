@@ -398,7 +398,7 @@ class Reservation(ModifiableModel):
         }
         return context
       
-    def send_reservation_mail(self, notification_type, user=None, attachments=None, bcc_list=[]):
+    def send_reservation_mail(self, notification_type, user=None, attachments=None, bcc_list=None):
         """
         Stuff common to all reservation related mails.
 
@@ -449,25 +449,25 @@ class Reservation(ModifiableModel):
         self.send_reservation_mail(NotificationType.RESERVATION_DENIED)
 
     def send_reservation_confirmed_mail(self):
+        attachments = []
         reservations = [self]
         ical_file = build_reservations_ical_file(reservations)
-        attachment = ('reservation.ics', ical_file, 'text/calendar')
-
-        pdf_receipt = None
-        bcc_list = []
-
+        calendar_attachment = ('reservation.ics', ical_file, 'text/calendar')
+        attachments.append(calendar_attachment)
+        bcc_list = None
+        
         if self.order and self.order.order_process_success:
             pdf_name = 'varaamo_kuitti_{0}.pdf'.format(time.strftime('%Y-%m-%d'))
             receipt_context = self.get_receipt_context()
             receipt = render_pdf_receipt_view(receipt_context)
             pdf_receipt = (pdf_name, receipt, 'application/pdf')
-
+            attachments.append(pdf_receipt)
+        
         if self.resource.recipients.count() > 0:
             bcc_list = self.resource.recipients.values_list('email', flat=True)
             
         self.send_reservation_mail(NotificationType.RESERVATION_CONFIRMED,
-                                   attachments=[attachment, pdf_receipt],
-                                   bcc_list=bcc_list)
+                                   attachments=attachments, bcc_list=bcc_list)
 
     def send_reservation_cancelled_mail(self):
         self.send_reservation_mail(NotificationType.RESERVATION_CANCELLED)
