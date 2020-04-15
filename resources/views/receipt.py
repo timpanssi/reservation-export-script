@@ -21,12 +21,19 @@ def render_pdf_receipt_view(request, order_id):
         order.reservation.end.strftime('%d.%m.%Y %H:%M')
     )
     order_number = generate_order_number('VARAUS', order.reservation.resource.name, order.id)
+    reservation_name = '{0} ({1})'.format(
+        order.reservation.resource.name,
+        order.reservation.resource.unit.name
+    )
+    share_of_tax = str(round((order.sku.price / 100 * order.sku.vat), 2))
+
     context = {
         'timestamp': time.strftime('%d.%m.%Y %H:%M'),
-        'reservation_name': order.reservation.resource.name,
+        'reservation_name': reservation_name,
         'reservation_period': reservation_period,
         'payment_price': '{0} euroa'.format(order.sku.price),
         'payment_vat': '{0} %'.format(order.sku.vat),
+        'share_of_tax': '{0} euroa'.format(share_of_tax),
         'payment_success_time': order.order_process_success.strftime('%d.%m.%Y %H:%M'),
         'reserver_name': order.reservation.reserver_name,
         'order_number': order_number,

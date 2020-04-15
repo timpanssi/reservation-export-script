@@ -386,18 +386,25 @@ class Reservation(ModifiableModel):
             self.begin.strftime('%d.%m.%Y %H:%M'),
             self.end.strftime('%d.%m.%Y %H:%M')
         )
+        reservation_name = '{0} ({1})'.format(
+            self.resource.name,
+            self.resource.unit.name
+        )
+        share_of_tax = str(round((self.order.sku.price / 100 * self.order.sku.vat), 2))
+
         context = {
             'timestamp': time.strftime('%d.%m.%Y %H:%M'),
-            'reservation_name': self.resource.name,
+            'reservation_name': reservation_name,
             'reservation_period': reservation_period,
             'payment_price': '{0} euroa'.format(self.order.sku.price),
             'payment_vat': '{0} %'.format(self.order.sku.vat),
+            'share_of_tax': '{0} euroa'.format(share_of_tax),
             'payment_success_time': self.order.order_process_success.strftime('%d.%m.%Y %H:%M'),
             'reserver_name': self.reserver_name,
             'order_number': order_number,
         }
         return context
-      
+
     def send_reservation_mail(self, notification_type, user=None, attachments=None, bcc_list=None):
         """
         Stuff common to all reservation related mails.
