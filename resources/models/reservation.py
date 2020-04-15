@@ -25,7 +25,7 @@ from .utils import (
     get_dt, save_dt, is_valid_time_slot, humanize_duration, send_respa_mail,
     DEFAULT_LANG, localize_datetime, format_dt_range, build_reservations_ical_file,
 )
-from ..views.receipt import render_pdf_receipt_view
+from .utils import render_pdf_receipt
 from respa_payments.integrations.paytrail_e2_utils import generate_order_number
 
 DEFAULT_TZ = pytz.timezone(settings.TIME_ZONE)

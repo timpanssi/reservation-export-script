@@ -57,6 +57,7 @@
                     <th scope="col">{% trans 'Resource' %}</th>
                     <th scope="col">{% trans 'Product' %}</th>
                     <th scope="col">{% trans 'Amount' %}</th>
+                    <th scope="col">{% trans 'Download PDF' %}</th>
                 </tr>
             </thead>
             <tbody>
@@ -79,6 +80,11 @@
                         </td>
                         <td>{% if payment.sku_name %}{{ payment.sku_name }}{% else %}{{ payment.sku.name }}{% endif %}</td>
                         <td>{{ payment.payment_service_amount|floatformat:2|add:" €"|default:"-" }}</td>
+                        <td>
+                            {% if payment and payment.payment_service_success %}
+                                <a href="{% url 'respa_admin:receipt' order_id=payment.pk%}" class="download-pdf-button">{% trans 'Download' %}</a>
+                            {% endif %}
+                        </td>
                     </tr>
                 {% endfor %}
             </tbody>

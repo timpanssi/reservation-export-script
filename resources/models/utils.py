@@ -11,11 +11,13 @@ from django.utils import formats
 from django.utils.translation import ungettext
 from django.core.mail import EmailMultiAlternatives
 from django.contrib.sites.models import Site
+from django.template.loader import get_template
 from django.utils.translation import ugettext_lazy as _
 from django.utils import timezone
 from django.utils.timezone import localtime
 from rest_framework.reverse import reverse
 from icalendar import Calendar, Event, vDatetime, vText, vGeo
+from xhtml2pdf import pisa
 import xlsxwriter
 
 
@@ -254,3 +256,16 @@ def build_ical_feed_url(ical_token, request):
 
     url = reverse('ical-feed', kwargs={'ical_token': ical_token}, request=request)
     return url[:url.find('?')]
+
+
+def render_pdf_receipt(context):
+    template_path = 'pdf_receipt.html'
+    template = get_template(template_path)
+    html = template.render(context)
+
+    buffer = io.BytesIO()
+    pisa.CreatePDF(html, dest=buffer)
+
+    pdf = buffer.getvalue()
+    buffer.close()
+    return pdf
