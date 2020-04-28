@@ -25,7 +25,7 @@ from .utils import (
     get_dt, save_dt, is_valid_time_slot, humanize_duration, send_respa_mail,
     DEFAULT_LANG, localize_datetime, format_dt_range, build_reservations_ical_file,
 )
-from ..views.receipt import render_pdf_receipt_view
+from .utils import render_pdf_receipt
 from respa_payments.integrations.paytrail_e2_utils import generate_order_number
 
 DEFAULT_TZ = pytz.timezone(settings.TIME_ZONE)
@@ -386,18 +386,25 @@ class Reservation(ModifiableModel):
             self.begin.strftime('%d.%m.%Y %H:%M'),
             self.end.strftime('%d.%m.%Y %H:%M')
         )
+        reservation_name = '{0} ({1})'.format(
+            self.resource.name,
+            self.resource.unit.name
+        )
+        share_of_tax = str(round((self.order.sku.price / 100 * self.order.sku.vat), 2))
+
         context = {
             'timestamp': time.strftime('%d.%m.%Y %H:%M'),
-            'reservation_name': self.resource.name,
+            'reservation_name': reservation_name,
             'reservation_period': reservation_period,
             'payment_price': '{0} euroa'.format(self.order.sku.price),
             'payment_vat': '{0} %'.format(self.order.sku.vat),
+            'share_of_tax': '{0} euroa'.format(share_of_tax),
             'payment_success_time': self.order.order_process_success.strftime('%d.%m.%Y %H:%M'),
             'reserver_name': self.reserver_name,
             'order_number': order_number,
         }
         return context
-      
+
     def send_reservation_mail(self, notification_type, user=None, attachments=None, bcc_list=None):
         """
         Stuff common to all reservation related mails.

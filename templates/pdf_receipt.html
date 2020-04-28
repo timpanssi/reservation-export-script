@@ -37,13 +37,14 @@
 <body>
   <h2>Varaukset Hämeenlinna kuitti, {{ timestamp }}</h2>
 
-  <p>Varaajan nimi: {{ reserver_name }}</p>
-  <p>Varauksen kohde: {{ reservation_name }}</p>
-  <p>Varaus tehty ajalle: {{ reservation_period }}</p>
-  <p>Varauksen hinta: {{ payment_price }}</p>
-  <p>Arvonlisävero: {{ payment_vat }}</p>
-  <p>Maksuajankohta: {{ payment_success_time }}</p>
-  <p>Maksun viite: {{ order_number }}</p>
+  <p>Varaajan nimi: {{ reserver_name|default:"-" }}</p>
+  <p>Varauksen kohde: {{ reservation_name|default:"-" }}</p>
+  <p>Varaus tehty ajalle: {{ reservation_period|default:"-" }}</p>
+  <p>Varauksen hinta: {{ payment_price|default:"-" }}</p>
+  <p>Arvonlisävero: {{ payment_vat|default:"-" }}</p>
+  <p>Veron osuus: {{ share_of_tax|default:"-" }}</p>
+  <p>Maksuajankohta: {{ payment_success_time|default:"-" }}</p>
+  <p>Maksun viite: {{ order_number|default:"-" }}</p>
 </body>
 
 </html>

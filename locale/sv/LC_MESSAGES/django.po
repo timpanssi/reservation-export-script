@@ -850,6 +850,9 @@ msgstr ""
 msgid "Delete Item"
 msgstr ""
 
+msgid "The requested order object was not found"
+msgstr "Det begärda orderobjektet hittades inte"
+
 msgid "Finnish"
 msgstr ""
 
@@ -1125,6 +1128,18 @@ msgstr ""
 
 msgid "Exchange reservations"
 msgstr ""
+
+msgid "Status"
+msgstr "Status"
+
+msgid "Amount"
+msgstr "Belopp"
+
+msgid "Download PDF"
+msgstr "Ladda ner PDF"
+
+msgid "Download"
+msgstr "Ladda ner"
 
 msgid "Favorite resources"
 msgstr ""

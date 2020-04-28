@@ -9,6 +9,7 @@ from .views.resources import (
 )
 from respa_payments.views import PaymentListView
 from .auth import admin_url as url
+from resources.views.receipt import render_pdf_receipt_view
 
 urlpatterns = [
     url(r'^$', ResourceListView.as_view(), name='index'),
@@ -20,4 +21,5 @@ urlpatterns = [
     url(r'^resource/new/$', SaveResourceView.as_view(), name='new-resource'),
     url(r'^resource/edit/(?P<resource_id>\w+)/$', SaveResourceView.as_view(), name='edit-resource'),
     url(r'^payments/$', PaymentListView.as_view(), name='payments'),
+    url(r'^receipt/(?P<order_id>\w+)/$', render_pdf_receipt_view, name='receipt')
 ]
