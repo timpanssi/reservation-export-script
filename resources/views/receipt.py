@@ -15,7 +15,7 @@ def render_pdf_receipt_view(request, order_id):
     except Order.DoesNotExist:
         return HttpResponseNotFound(_('The requested order object was not found'))
 
-    pdf_name = 'varaamo_kuitti_{0}.pdf'.format(time.strftime('%Y-%m-%d'))
+    pdf_name = 'varaukset_hameenlinna_kuitti_{0}.pdf'.format(time.strftime('%Y-%m-%d'))
     reservation_period = '{0} - {1}'.format(
         order.reservation.begin.strftime('%d.%m.%Y %H:%M'),
         order.reservation.end.strftime('%d.%m.%Y %H:%M')

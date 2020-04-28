@@ -464,7 +464,7 @@ class Reservation(ModifiableModel):
         bcc_list = None
         
         if self.order and self.order.payment_service_success:
-            pdf_name = 'varaamo_kuitti_{0}.pdf'.format(time.strftime('%Y-%m-%d'))
+            pdf_name = 'varaukset_hameenlinna_kuitti_{0}.pdf'.format(time.strftime('%Y-%m-%d'))
             receipt_context = self.get_receipt_context()
             receipt = render_pdf_receipt_view(receipt_context)
             pdf_receipt = (pdf_name, receipt, 'application/pdf')
