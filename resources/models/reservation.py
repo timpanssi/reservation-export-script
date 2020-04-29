@@ -462,17 +462,17 @@ class Reservation(ModifiableModel):
         calendar_attachment = ('reservation.ics', ical_file, 'text/calendar')
         attachments.append(calendar_attachment)
         bcc_list = None
-        
+
         if self.order and self.order.payment_service_success:
             pdf_name = 'varaamo_kuitti_{0}.pdf'.format(time.strftime('%Y-%m-%d'))
             receipt_context = self.get_receipt_context()
-            receipt = render_pdf_receipt_view(receipt_context)
+            receipt = render_pdf_receipt(receipt_context)
             pdf_receipt = (pdf_name, receipt, 'application/pdf')
             attachments.append(pdf_receipt)
-        
+
         if self.resource.recipients.count() > 0:
             bcc_list = self.resource.recipients.values_list('email', flat=True)
-            
+
         self.send_reservation_mail(NotificationType.RESERVATION_CONFIRMED,
                                    attachments=attachments, bcc_list=bcc_list)
 
