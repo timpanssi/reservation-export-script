@@ -49,5 +49,5 @@ def render_pdf_receipt_view(request, order_id):
     buffer.close()
 
     response = HttpResponse(pdf, content_type='application/pdf')
-    response['Content-Disposition'] = f'attachment; filename="{pdf_name}"'
+    response['Content-Disposition'] = 'attachment; filename="{}"'.format(pdf_name)
     return response
