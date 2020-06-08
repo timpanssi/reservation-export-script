@@ -1,19 +1,12 @@
-
 FROM python:3.5
-
-WORKDIR /usr/src/app
 
 ENV APP_NAME respa
 
-RUN apt-get update && apt-get install -y gdal-bin postgresql-client
+RUN apt-get update
+RUN apt-get install -y libgsl-dev libgdal20 gdal-data postgresql
 
-COPY requirements.txt .
-COPY deploy/requirements.txt ./deploy/requirements.txt
+COPY . /code
+WORKDIR /code
 
-RUN pip install --no-cache-dir -r deploy/requirements.txt
-
-COPY . .
-
-RUN mkdir -p www/media
-
-CMD deploy/server.sh
+RUN pip3 install setuptools==45
+RUN pip3 install -r dev-requirements.txt
