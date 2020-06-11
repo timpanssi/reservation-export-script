@@ -525,7 +525,7 @@ class PurchaseView(APIView):
             purchase.payment_service_return_authcode = request.GET.get('RETURN_AUTHCODE', None)
             purchase.save()
             purchase.set_success()
-            return HttpResponseRedirect('/#purchase/' + purchase_code)
+            return HttpResponseRedirect('/venepaikat/#purchase/' + purchase_code)
         elif request.GET.get('failure', None):
             if not settings.PAYTRAIL_MERCHANT_ID or not settings.PAYTRAIL_MERCHANT_SECRET:
                 raise ImproperlyConfigured(_('Paytrail credentials are incorrect or missing'))
@@ -542,7 +542,7 @@ class PurchaseView(APIView):
             purchase.save()
             purchase.set_failure()
             purchase.berth_reservation.cancel_reservation(self.request.user)
-            return HttpResponseRedirect('/#purchase/' + purchase_code)
+            return HttpResponseRedirect('/venepaikat/#purchase/' + purchase_code)
         elif request.GET.get('notification', None):
             if not settings.PAYTRAIL_MERCHANT_ID or not settings.PAYTRAIL_MERCHANT_SECRET:
                 raise ImproperlyConfigured(_('Paytrail credentials are incorrect or missing'))
