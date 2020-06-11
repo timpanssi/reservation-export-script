@@ -340,8 +340,8 @@ class Reservation(ModifiableModel):
                 'resource': self.resource.name,
                 'begin': localize_datetime(self.begin),
                 'end': localize_datetime(self.end),
-                'begin_dt': self.begin,
-                'end_dt': self.end,
+                'begin_dt': self.begin.strftime('%d.%m.%Y'),
+                'end_dt': self.end.strftime('%d.%m.%Y'),
                 'time_range': self.format_time(),
                 'number_of_participants': self.number_of_participants,
                 'host_name': self.host_name,
@@ -383,8 +383,8 @@ class Reservation(ModifiableModel):
     def get_receipt_context(self):
         order_number = generate_order_number('VARAUS', self.resource.name, self.order.id)
         reservation_period = '{0} - {1}'.format(
-            self.begin.strftime('%d.%m.%Y %H:%M'),
-            self.end.strftime('%d.%m.%Y %H:%M')
+            self.begin.strftime('%d.%m.%Y'),
+            self.end.strftime('%d.%m.%Y')
         )
         reservation_name = '{0} ({1})'.format(
             self.resource.name,

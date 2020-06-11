@@ -17,8 +17,8 @@ def render_pdf_receipt_view(request, order_id):
 
     pdf_name = 'varaukset_hameenlinna_kuitti_{0}.pdf'.format(time.strftime('%Y-%m-%d'))
     reservation_period = '{0} - {1}'.format(
-        order.reservation.begin.strftime('%d.%m.%Y %H:%M'),
-        order.reservation.end.strftime('%d.%m.%Y %H:%M')
+        order.reservation.begin.strftime('%d.%m.%Y'),
+        order.reservation.end.strftime('%d.%m.%Y')
     )
     order_number = generate_order_number('VARAUS', order.reservation.resource.name, order.id)
     reservation_name = '{0} ({1})'.format(
