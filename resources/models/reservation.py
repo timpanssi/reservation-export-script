@@ -338,10 +338,10 @@ class Reservation(ModifiableModel):
                 reserver_name = self.user.get_display_name()
             context = {
                 'resource': self.resource.name,
-                'begin': localize_datetime(self.begin),
-                'end': localize_datetime(self.end),
-                'begin_dt': self.begin.strftime('%d.%m.%Y'),
-                'end_dt': self.end.strftime('%d.%m.%Y'),
+                'begin': self.begin.strftime('%d.%m.%Y'),
+                'end': self.end.strftime('%d.%m.%Y'),
+                'begin_dt': self.begin,
+                'end_dt': self.end,
                 'time_range': self.format_time(),
                 'number_of_participants': self.number_of_participants,
                 'host_name': self.host_name,
