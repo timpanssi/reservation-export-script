@@ -463,7 +463,12 @@ class Reservation(ModifiableModel):
         attachments.append(calendar_attachment)
         bcc_list = None
 
-        if self.order and self.order.payment_service_success:
+        try:
+            reservation_order = self.order
+        except RelatedObjectDoesNotExist:
+            reservation_order = None
+
+        if reservation_order and self.order.payment_service_success:
             pdf_name = 'varaukset_hameenlinna_kuitti_{0}.pdf'.format(time.strftime('%Y-%m-%d'))
             receipt_context = self.get_receipt_context()
             receipt = render_pdf_receipt(receipt_context)
