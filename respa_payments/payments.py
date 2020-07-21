@@ -60,8 +60,8 @@ class PaymentIntegration(object):
 
         order_serializer = OrderSerializer(order, data=callback_data)
         if order_serializer.is_valid() and callback_data.get('payment_service_success', False):
-            reservation.set_state(Reservation.CONFIRMED, self.request.user)
             order_serializer.save()
+            reservation.set_state(Reservation.CONFIRMED, self.request.user)
         else:
             reservation.comments = 'Payment was unsuccesful.'
             reservation.set_state(Reservation.DENIED, self.request.user)  # set_state() saves the reservation

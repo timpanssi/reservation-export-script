@@ -39,6 +39,8 @@ from .unit import Unit
 from .availability import get_opening_hours
 from .permissions import RESOURCE_GROUP_PERMISSIONS
 
+from users.models import User
+
 
 def generate_access_code(access_code_type):
     if access_code_type == Resource.ACCESS_CODE_TYPE_NONE:
@@ -222,6 +224,13 @@ class Resource(ModifiableModel, AutoIdentifiedModel):
         verbose_name=_('External reservation URL'),
         help_text=_('A link to an external reservation system if this resource is managed elsewhere'),
         null=True, blank=True)
+    recipients = models.ManyToManyField(
+        User,
+        verbose_name=_('Recipients'),
+        help_text=_('Users to receive emails from confirmed reservations'),
+        related_name='recipient_for_resources',
+        blank=True
+    )
 
     objects = ResourceQuerySet.as_manager()
 

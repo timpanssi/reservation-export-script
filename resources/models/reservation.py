@@ -2,6 +2,7 @@
 import logging
 import datetime
 import pytz
+import time
 
 from django.utils import timezone
 import django.contrib.postgres.fields as pgfields
@@ -22,8 +23,10 @@ from .resource import generate_access_code, validate_access_code
 from .resource import Resource, DurationSlot
 from .utils import (
     get_dt, save_dt, is_valid_time_slot, humanize_duration, send_respa_mail,
-    DEFAULT_LANG, localize_datetime, format_dt_range, build_reservations_ical_file
+    DEFAULT_LANG, localize_datetime, format_dt_range, build_reservations_ical_file,
 )
+from .utils import render_pdf_receipt
+from respa_payments.integrations.paytrail_e2_utils import generate_order_number
 
 DEFAULT_TZ = pytz.timezone(settings.TIME_ZONE)
 
@@ -231,8 +234,6 @@ class Reservation(ModifiableModel):
         elif old_state == Reservation.CONFIRMED:
             self.approver = None
 
-        user_is_staff = self.user is not None and self.user.is_staff
-
         # Notifications
         if new_state == Reservation.REQUESTED:
             self.send_reservation_requested_mail()
@@ -243,8 +244,7 @@ class Reservation(ModifiableModel):
             elif self.resource.is_access_code_enabled():
                 self.send_reservation_created_with_access_code_mail()
             else:
-                if not user_is_staff:
-                    # notifications are not sent from staff created reservations to avoid spam
+                if self.user:
                     self.send_reservation_created_mail()
         elif new_state == Reservation.DENIED:
             self.send_reservation_denied_mail()
@@ -338,8 +338,8 @@ class Reservation(ModifiableModel):
                 reserver_name = self.user.get_display_name()
             context = {
                 'resource': self.resource.name,
-                'begin': localize_datetime(self.begin),
-                'end': localize_datetime(self.end),
+                'begin': self.begin.strftime('%d.%m.%Y'),
+                'end': self.end.strftime('%d.%m.%Y'),
                 'begin_dt': self.begin,
                 'end_dt': self.end,
                 'time_range': self.format_time(),
@@ -380,7 +380,32 @@ class Reservation(ModifiableModel):
 
         return context
 
-    def send_reservation_mail(self, notification_type, user=None, attachments=None):
+    def get_receipt_context(self):
+        order_number = generate_order_number('VARAUS', self.resource.name, self.order.id)
+        reservation_period = '{0} - {1}'.format(
+            self.begin.strftime('%d.%m.%Y'),
+            self.end.strftime('%d.%m.%Y')
+        )
+        reservation_name = '{0} ({1})'.format(
+            self.resource.name,
+            self.resource.unit.name
+        )
+        share_of_tax = str(round((self.order.sku.price / 100 * self.order.sku.vat), 2))
+
+        context = {
+            'timestamp': time.strftime('%d.%m.%Y %H:%M'),
+            'reservation_name': reservation_name,
+            'reservation_period': reservation_period,
+            'payment_price': '{0} euroa'.format(self.order.sku.price),
+            'payment_vat': '{0} %'.format(self.order.sku.vat),
+            'share_of_tax': '{0} euroa'.format(share_of_tax),
+            'payment_success_time': self.order.order_process_success.strftime('%d.%m.%Y %H:%M'),
+            'reserver_name': self.reserver_name,
+            'order_number': order_number,
+        }
+        return context
+
+    def send_reservation_mail(self, notification_type, user=None, attachments=None, bcc_list=None):
         """
         Stuff common to all reservation related mails.
 
@@ -413,7 +438,8 @@ class Reservation(ModifiableModel):
             rendered_notification['subject'],
             rendered_notification['body'],
             rendered_notification['html_body'],
-            attachments
+            attachments,
+            bcc_list
         )
 
     def send_reservation_requested_mail(self):
@@ -430,11 +456,30 @@ class Reservation(ModifiableModel):
         self.send_reservation_mail(NotificationType.RESERVATION_DENIED)
 
     def send_reservation_confirmed_mail(self):
+        attachments = []
         reservations = [self]
         ical_file = build_reservations_ical_file(reservations)
-        attachment = ('reservation.ics', ical_file, 'text/calendar')
+        calendar_attachment = ('reservation.ics', ical_file, 'text/calendar')
+        attachments.append(calendar_attachment)
+        bcc_list = None
+
+        try:
+            reservation_order = self.order
+        except RelatedObjectDoesNotExist:
+            reservation_order = None
+
+        if reservation_order and self.order.payment_service_success:
+            pdf_name = 'varaukset_hameenlinna_kuitti_{0}.pdf'.format(time.strftime('%Y-%m-%d'))
+            receipt_context = self.get_receipt_context()
+            receipt = render_pdf_receipt(receipt_context)
+            pdf_receipt = (pdf_name, receipt, 'application/pdf')
+            attachments.append(pdf_receipt)
+
+        if self.resource.recipients.count() > 0:
+            bcc_list = self.resource.recipients.values_list('email', flat=True)
+
         self.send_reservation_mail(NotificationType.RESERVATION_CONFIRMED,
-                                   attachments=[attachment])
+                                   attachments=attachments, bcc_list=bcc_list)
 
     def send_reservation_cancelled_mail(self):
         self.send_reservation_mail(NotificationType.RESERVATION_CANCELLED)

@@ -36,6 +36,8 @@
             {% include "respa_admin/forms/_textarea_input.html" with field=form.reservation_confirmed_notification_extra_fi %}
             {% include "respa_admin/forms/_textarea_input.html" with field=form.reservation_confirmed_notification_extra_en %}
             {% include "respa_admin/forms/_textarea_input.html" with field=form.reservation_confirmed_notification_extra_sv %}
+            {% include "respa_admin/forms/_select_multiple.html" with field=form.recipients %}
+            <p>{% trans "Hold down Ctrl (Windows) or Command (Mac) button to select multiple options" %}</p>
         </div>
     </div>
 </div>

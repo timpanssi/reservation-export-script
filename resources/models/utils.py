@@ -11,11 +11,13 @@ from django.utils import formats
 from django.utils.translation import ungettext
 from django.core.mail import EmailMultiAlternatives
 from django.contrib.sites.models import Site
+from django.template.loader import get_template
 from django.utils.translation import ugettext_lazy as _
 from django.utils import timezone
 from django.utils.timezone import localtime
 from rest_framework.reverse import reverse
 from icalendar import Calendar, Event, vDatetime, vText, vGeo
+from xhtml2pdf import pisa
 import xlsxwriter
 
 
@@ -101,7 +103,7 @@ def humanize_duration(duration):
 notification_logger = logging.getLogger('respa.notifications')
 
 
-def send_respa_mail(email_address, subject, body, html_body=None, attachments=None):
+def send_respa_mail(email_address, subject, body, html_body=None, attachments=None, bcc_list=None):
     if not getattr(settings, 'RESPA_MAILS_ENABLED', False):
         return
 
@@ -111,7 +113,20 @@ def send_respa_mail(email_address, subject, body, html_body=None, attachments=No
     notification_logger.info('Sending notification email to %s: "%s"' % (email_address, subject))
 
     text_content = body
-    msg = EmailMultiAlternatives(subject, text_content, from_address, [email_address], attachments=attachments)
+
+    extra_kwargs = {}
+    if attachments:
+      extra_kwargs['attachments'] = attachments
+    if bcc_list:
+      extra_kwargs['bcc'] = bcc_list
+
+    msg = EmailMultiAlternatives(
+        subject,
+        text_content,
+        from_address,
+        [email_address],
+        **extra_kwargs,
+    )
     if html_body:
         msg.attach_alternative(html_body, 'text/html')
     msg.send()
@@ -241,3 +256,16 @@ def build_ical_feed_url(ical_token, request):
 
     url = reverse('ical-feed', kwargs={'ical_token': ical_token}, request=request)
     return url[:url.find('?')]
+
+
+def render_pdf_receipt(context):
+    template_path = 'pdf_receipt.html'
+    template = get_template(template_path)
+    html = template.render(context)
+
+    buffer = io.BytesIO()
+    pisa.CreatePDF(html, dest=buffer)
+
+    pdf = buffer.getvalue()
+    buffer.close()
+    return pdf

@@ -1,0 +1,19 @@
+{
+  "name": "Respa",
+  "dockerComposeFile": [
+    "../docker-compose.yml",
+    "docker-compose.yml"
+  ],
+  "service": "runserver",
+  "workspaceFolder": "/code",
+  "runServices": [
+    "runserver",
+    "postgresql"
+  ],
+  "shutdownAction": "stopCompose",
+  "extensions": [
+    "ms-python.python",
+    "donjayamanne.githistory",
+    "eamodio.gitlens"
+  ]
+}

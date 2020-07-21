@@ -1,0 +1,12 @@
+<div class="form-group">
+    <label
+        class="control-label input-label"
+        for="{{ field.id_for_label }}"
+    >
+        {{ field.label }}{% if field.field.required %}*{% endif %}
+    </label>
+    <div>
+        {{ field }}
+        {% include "respa_admin/forms/_errors.html" with field=field %}
+    </div>
+</div>

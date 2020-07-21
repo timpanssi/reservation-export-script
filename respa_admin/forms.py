@@ -18,6 +18,8 @@ from resources.models import (
     ResourceImage,
 )
 
+from users.models import User
+
 from respa.settings import LANGUAGES
 
 
@@ -115,6 +117,12 @@ class ResourceForm(forms.ModelForm):
         label='Nimi [fi]',
     )
 
+    recipients = forms.ModelMultipleChoiceField(
+        required=False,
+        label=_('Recipients'),
+        queryset=User.objects.all().exclude(email='')
+    )
+
     class Meta:
         model = Resource
 
@@ -161,6 +169,7 @@ class ResourceForm(forms.ModelForm):
             'generic_terms',
             'public',
             'reservation_metadata_set',
+            'recipients'
         ] + translated_fields
 
         widgets = {

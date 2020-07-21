@@ -48,7 +48,8 @@
         <table class='table'>
             <thead>
                 <tr>
-                    <th scope="col">{% trans 'Date' %}</th>
+                    <th scope="col">{% trans 'Created' %}</th>
+                    <th scope="col">{% trans 'Period' %}</th>
                     <th scope="col">{% trans 'Status' %}</th>
                     <th scope="col">{% trans 'Name' %}</th>
                     <th scope="col">{% trans 'Email' %}</th>
@@ -56,12 +57,14 @@
                     <th scope="col">{% trans 'Resource' %}</th>
                     <th scope="col">{% trans 'Product' %}</th>
                     <th scope="col">{% trans 'Amount' %}</th>
+                    <th scope="col">{% trans 'Download PDF' %}</th>
                 </tr>
             </thead>
             <tbody>
                 {% for payment in payments %}
                     <tr>
                         <th scope="row">{{ payment.order_process_started|date:"d.m.Y"|default:"-"  }}</th>
+                        <td>{{ payment.reservation.begin|date:"d.m.Y" }}-{{ payment.reservation.end|date:"d.m.Y" }}</td>
                         <td>{{ payment.payment_service_status|default:"-"|lower }}</td>
                         <td>{{ payment.reservation.reserver_name|default:"-" }}</td>
                         <td>{{ payment.reservation.reserver_email_address|default:"-" }}</td>
@@ -77,6 +80,11 @@
                         </td>
                         <td>{% if payment.sku_name %}{{ payment.sku_name }}{% else %}{{ payment.sku.name }}{% endif %}</td>
                         <td>{{ payment.payment_service_amount|floatformat:2|add:" €"|default:"-" }}</td>
+                        <td>
+                            {% if payment and payment.payment_service_success %}
+                                <a href="{% url 'respa_admin:receipt' order_id=payment.pk%}" class="download-pdf-button">{% trans 'Download' %}</a>
+                            {% endif %}
+                        </td>
                     </tr>
                 {% endfor %}
             </tbody>
