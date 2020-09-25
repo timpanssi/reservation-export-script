@@ -83,11 +83,10 @@ class PaymentIntegration(object):
 
     def skip_payment(self, order):
         reservation = order.reservation
-        reservation.state = Reservation.CONFIRMED
-        reservation.approver = self.request.user
         if not reservation.comments:
             reservation.comments = 'Reservation created by staff.'
         reservation.save()
+        reservation.set_state(Reservation.CONFIRMED, self.request.user)
         order.order_process_success = timezone.now()
         order.order_process_log = 'Reservation created by staff.'
         order.save()
