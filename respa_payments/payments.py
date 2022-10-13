@@ -1,15 +1,13 @@
 import uuid
 from django.utils.translation import ugettext_lazy as _
-from django.core.exceptions import ImproperlyConfigured, ValidationError
 from django.utils import timezone
 from django.http import HttpResponseRedirect
-from rest_framework import status, serializers
+from rest_framework import status
 from rest_framework.response import Response
 from resources.models import Reservation
 from respa_payments import settings
 from respa_payments.api import OrderSerializer
 from respa_payments.models import Order
-from users.models import User
 
 
 class PaymentIntegration(object):
@@ -19,14 +17,14 @@ class PaymentIntegration(object):
         self.url_redirect_callback = settings.URL_REDIRECT_CALLBACK
         self.url_notify = settings.URL_NOTIFY
 
-    def construct_order_post(self, order):
+    def order_post_handler(self, order):
         self.url_success = '{}?id={}&verification_code={}'.format(
             settings.URL_SUCCESS, order.get('id', None), order.get('verification_code', None))
         self.url_cancel = '{}?id={}&verification_code={}'.format(
             settings.URL_CANCEL, order.get('id', None), order.get('verification_code', None))
         return order
 
-    def construct_payment_callback(self):
+    def payment_callback_handler(self):
         callback_data = {
             'redirect_url': self.url_redirect_callback or '',
             'order_process_success': timezone.now(),
@@ -44,12 +42,12 @@ class PaymentIntegration(object):
             order = order_serializer.save()
             if self.request.user.is_staff:
                 return self.skip_payment(order)
-            post_data = self.construct_order_post(OrderSerializer(order).data)
+            post_data = self.order_post_handler(OrderSerializer(order).data)
             return Response(post_data, status=status.HTTP_201_CREATED)
         return Response(order_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def payment_callback(self):
-        callback_data = self.construct_payment_callback()
+        callback_data = self.payment_callback_handler()
         order_id = self.request.GET.get('id')
         verification_code = self.request.GET.get('verification_code')
         try:

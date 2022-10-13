@@ -32,21 +32,21 @@ class Purchase(ModifiableModel):
     finished = models.DateTimeField(verbose_name=_('Purchase finished'), blank=True, null=True)
 
     def set_success(self):
-        if self.purchase_process_failure or self.purchase_process_success or self.purchase_process_notified:
+        if self.purchase_process_failure or self.purchase_process_notified:
             raise SuspiciousOperation(_('Purchase callback has already returned'))
-
-        self.purchase_process_success = timezone.now()
-        self.save()
-        tasks.send_confirmation.delay(self.berth_reservation.pk)
+        if not self.purchase_process_success:
+            self.purchase_process_success = timezone.now()
+            self.save()
+            tasks.send_confirmation.delay(self.berth_reservation.pk)
 
     def set_failure(self, user=AnonymousUser()):
-        if self.purchase_process_failure or self.purchase_process_success or self.purchase_process_notified:
+        if self.purchase_process_success or self.purchase_process_notified:
             raise SuspiciousOperation(_('Purchase callback has already returned'))
-
-        self.purchase_process_failure = timezone.now()
-        self.berth_reservation.cancel_reservation(user)
-        self.finished = timezone.now()
-        self.save()
+        if not self.purchase_process_failure:
+            self.purchase_process_failure = timezone.now()
+            self.berth_reservation.cancel_reservation(user)
+            self.finished = timezone.now()
+            self.save()
 
     def set_notification(self):
         if not self.purchase_process_success:

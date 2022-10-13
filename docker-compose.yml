@@ -42,7 +42,7 @@ services:
     # volumes:
     #   - ./psql:/var/lib/postgresql:Z
     ports:
-      - 5432
+      - '5432:5432'
     networks:
       - network
 

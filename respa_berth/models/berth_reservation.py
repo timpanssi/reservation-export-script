@@ -79,12 +79,12 @@ class BerthReservation(models.Model):
             raise Exception('Invalid or no berth type defined in %s' % s)
         return {
             'title': self.berth.resource.name + ' (' + self.berth.resource.unit.name + ')',
-            'product_id': self.berth.id,
+            'product_id': str(self.berth.id),
             'amount': 1,
-            'price': str(self.berth.price),
+            'price': int(self.berth.price),
             'vat': 24,
             'discount': 0,
-            'type': 1,
+            'type': '1',
             'berth_type': berth_type,
         }
 

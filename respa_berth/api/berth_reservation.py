@@ -1,5 +1,6 @@
 import arrow
 import django_filters
+import json
 import re
 import hashlib
 import logging
@@ -13,6 +14,7 @@ from munigeo import api as munigeo_api
 from resources.models import Reservation
 from respa_berth.api.reservation import ReservationSerializer
 from respa_berth.api.berth import BerthSerializer
+from respa_berth.berth_payments.paytrail_payment_berth import PaytrailPaymentsIntegration
 from respa_berth.models.berth_reservation import BerthReservation
 from respa_berth.models.purchase import Purchase
 from resources.api.base import TranslatedModelSerializer, register_view
@@ -26,6 +28,7 @@ from django.conf import settings
 from django.http import HttpResponseRedirect
 from datetime import timedelta
 from django.db.models import Q
+from django.utils.module_loading import import_string
 from rest_framework.exceptions import ParseError
 from respa_berth import tasks
 from respa_berth.models.sms_message import SMSMessage
@@ -401,11 +404,18 @@ class BerthReservationViewSet(munigeo_api.GeoModelAPIView, viewsets.ModelViewSet
 
 class PurchaseView(APIView):
     permission_classes = (permissions.AllowAny,)
+    if (
+        not settings.BERTH_PAYMENTS_PAYTRAIL_MERCHANT_ID
+        or not settings.BERTH_PAYMENTS_PAYTRAIL_MERCHANT_SECRET
+    ):
+        raise ImproperlyConfigured(_('Paytrail credentials are incorrect or missing'))
+
+    def __init__(self):
+        self.payment_integration = import_string(settings.BERTH_INTEGRATION_CLASS)
+
     def post(self, request, format=None):
         if request.user.is_authenticated():
             PermissionDenied(_('This API is only for non-authenticated users'))
-        if not settings.PAYTRAIL_MERCHANT_ID or not settings.PAYTRAIL_MERCHANT_SECRET:
-            raise ImproperlyConfigured(_('Paytrail credentials are incorrect or missing'))
 
         reservation = request.data['reservation']
         reservation['begin'] = timezone.now()
@@ -430,134 +440,139 @@ class PurchaseView(APIView):
             url = request.build_absolute_uri()
             purchase_code = hashlib.sha1(str(reservation.reservation.created_at).encode('utf-8') + str(reservation.pk).encode('utf-8')).hexdigest()
 
-            contact = PaytrailContact(**reservation.get_payment_contact_data())
-            product = PaytrailProduct(**reservation.get_payment_product_data())
-            url_set = PaytrailUrlset(success_url=url + '?success=' + purchase_code, failure_url=url + '?failure=' + purchase_code, notification_url=url + '?notification=' + purchase_code)
-            purchase = Purchase.objects.create(berth_reservation=reservation,
-                    purchase_code=purchase_code,
-                    reserver_name=reservation.reservation.reserver_name,
-                    reserver_email_address=reservation.reservation.reserver_email_address,
-                    reserver_phone_number=reservation.reservation.reserver_phone_number,
-                    reserver_address_street=reservation.reservation.reserver_address_street,
-                    reserver_address_zip=reservation.reservation.reserver_address_zip,
-                    reserver_address_city=reservation.reservation.reserver_address_city,
-                    vat_percent=product.get_data()['vat'],
-                    price_vat=product.get_data()['price'],
-                    product_name=product.get_data()['title']
-                    )
-            payment = PaytrailPaymentExtended(
-                    service='VARAUS',
-                    product='VENEPAIKKA',
-                    product_type=product.get_data()['berth_type'],
-                    order_number=purchase.pk,
-                    contact=contact,
-                    urlset=url_set
-                    )
-            payment.add_product(product)
-
-            query_string = PaytrailArguments(
-                merchant_auth_hash=settings.PAYTRAIL_MERCHANT_SECRET,
-                merchant_id=settings.PAYTRAIL_MERCHANT_ID,
-                url_success=url + '?success=' + purchase_code,
-                url_cancel=url + '?failure=' + purchase_code,
-                url_notify=url + '?notification=' + purchase_code,
-                order_number=payment.get_data()['orderNumber'],
-                params_in=(
-                    'MERCHANT_ID,'
-                    'URL_SUCCESS,'
-                    'URL_CANCEL,'
-                    'URL_NOTIFY,'
-                    'ORDER_NUMBER,'
-                    'PARAMS_IN,'
-                    'PARAMS_OUT,'
-                    'PAYMENT_METHODS,'
-                    'ITEM_TITLE[0],'
-                    'ITEM_ID[0],'
-                    'ITEM_QUANTITY[0],'
-                    'ITEM_UNIT_PRICE[0],'
-                    'ITEM_VAT_PERCENT[0],'
-                    'ITEM_DISCOUNT_PERCENT[0],'
-                    'ITEM_TYPE[0],'
-                    'PAYER_PERSON_PHONE,'
-                    'PAYER_PERSON_EMAIL,'
-                    'PAYER_PERSON_FIRSTNAME,'
-                    'PAYER_PERSON_LASTNAME,'
-                    'PAYER_PERSON_ADDR_STREET,'
-                    'PAYER_PERSON_ADDR_POSTAL_CODE,'
-                    'PAYER_PERSON_ADDR_TOWN'
-                    ),
-                params_out='PAYMENT_ID,TIMESTAMP,STATUS',
-                payment_methods='1,2,3,5,6,10,50,51,52,61',
-                item_title=product.get_data()['title'],
-                item_id=product.get_data()['code'],
-                item_quantity=product.get_data()['amount'],
-                item_unit_price=product.get_data()['price'],
-                item_vat_percent=product.get_data()['vat'],
-                item_discount_percent=product.get_data()['discount'],
-                item_type=product.get_data()['type'],
-                payer_person_phone=contact.get_data()['mobile'],
-                payer_person_email=contact.get_data()['email'],
-                payer_person_firstname=contact.get_data()['firstName'],
-                payer_parson_lastname=contact.get_data()['lastName'],
-                payer_person_addr_street=contact.get_data()['address']['street'],
-                payer_person_add_postal_code=contact.get_data()['address']['postalCode'],
-                payer_person_addr_town=contact.get_data()['address']['postalOffice'],
+            contact = reservation.get_payment_contact_data()
+            product = reservation.get_payment_product_data()
+            purchase = Purchase.objects.create(
+                berth_reservation=reservation,
+                purchase_code=purchase_code,
+                reserver_name=reservation.reservation.reserver_name,
+                reserver_email_address=reservation.reservation.reserver_email_address,
+                reserver_phone_number=reservation.reservation.reserver_phone_number,
+                reserver_address_street=reservation.reservation.reserver_address_street,
+                reserver_address_zip=reservation.reservation.reserver_address_zip,
+                reserver_address_city=reservation.reservation.reserver_address_city,
+                vat_percent=product["vat"],
+                price_vat=product["price"],
+                product_name=product["title"]
             )
 
-            return Response({'query_string': query_string.get_data()}, status=status.HTTP_200_OK)
+            paytrail_redirect_urls = {
+                'success': url + '?success=' + purchase_code,
+                'cancel': url + '?failure=' + purchase_code,
+            }
+
+            paytrail_callback_urls = {
+                'success': url + '?notification=' + purchase_code,
+                'cancel': url + '?notification=' + purchase_code,
+            }
+
+            paytrail_items = [{
+                # payment_methods='1,2,3,5,6,10,50,51,52,61',
+                'description': product['title'],
+                'productCode': product['product_id'],
+                'units': product['amount'],
+                'unitPrice': product['price'],
+                'vatPercentage': product['vat'],
+                'product_type': product['berth_type'],
+            }]
+
+            paytrail_customer = {
+                'phone': contact['mobile'],
+                'email': contact['email'],
+                'firstName': contact['first_name'],
+                'lastName': contact['last_name'],
+            }
+
+            paytrail_address = {
+                'streetAddress': contact['street'],
+                'postalCode': contact['postal_code'],
+                'city': contact['postal_office'],
+                'country': 'FI',
+            }
+
+            paytrail_data = PaytrailArguments(
+                purchase,
+                items=paytrail_items,
+                customer=paytrail_customer,
+                invoicingAddress=paytrail_address,
+                redirectUrls=paytrail_redirect_urls,
+                callbackUrls=paytrail_callback_urls,
+            )
+            paytrail_query = paytrail_data.get_payment_data()
+
+            url = self.payment_integration(payment_data=paytrail_query).payment_post()
+            return Response(url, status=status.HTTP_200_OK)
+
         else:
             LOG.info(serializer.errors)
             raise ValidationError(_('Invalid payment data'))
 
     def get(self, request, format=None):
         if request.GET.get('success', None):
-            if not settings.PAYTRAIL_MERCHANT_ID or not settings.PAYTRAIL_MERCHANT_SECRET:
-                raise ImproperlyConfigured(_('Paytrail credentials are incorrect or missing'))
-            client = PaytrailAPIClient(merchant_id=settings.PAYTRAIL_MERCHANT_ID, merchant_secret=settings.PAYTRAIL_MERCHANT_SECRET)
-            if not client.validate_callback_data(request.GET):
+            if not self.payment_integration.payment_callback_handler(request):
                 raise ValidationError(_('Checksum failed. Invalid payment.'))
             purchase_code = request.GET.get('success', None)
+            LOG.debug("Returned from PayTrail with Purchase Code: " + purchase_code)
             purchase = Purchase.objects.get(purchase_code=purchase_code)
             purchase.payment_service_order_number = request.GET.get('ORDER_NUMBER', None)
-            purchase.payment_service_timestamp = request.GET.get('TIMESTAMP', None)
-            purchase.payment_service_paid = request.GET.get('PAID', None)
+            purchase.payment_service_timestamp = timezone.now()
+            purchase.payment_service_paid = request.GET.get('checkout-stamp', None)
             purchase.payment_service_method = request.GET.get('METHOD', None)
-            purchase.payment_service_return_authcode = request.GET.get('RETURN_AUTHCODE', None)
+            purchase.payment_service_return_authcode = request.GET.get('signature', None)
             purchase.save()
             purchase.set_success()
             return HttpResponseRedirect('/venepaikat/#purchase/' + purchase_code)
         elif request.GET.get('failure', None):
-            if not settings.PAYTRAIL_MERCHANT_ID or not settings.PAYTRAIL_MERCHANT_SECRET:
-                raise ImproperlyConfigured(_('Paytrail credentials are incorrect or missing'))
-            client = PaytrailAPIClient(merchant_id=settings.PAYTRAIL_MERCHANT_ID, merchant_secret=settings.PAYTRAIL_MERCHANT_SECRET)
-            if not client.validate_callback_data(request.GET):
+            if not self.payment_integration.payment_callback_handler(request):
                 raise ValidationError(_('Checksum failed. Invalid payment.'))
             purchase_code = request.GET.get('failure', None)
             purchase = Purchase.objects.get(purchase_code=purchase_code)
             purchase.payment_service_order_number = request.GET.get('ORDER_NUMBER', None)
-            purchase.payment_service_timestamp = request.GET.get('TIMESTAMP', None)
-            purchase.payment_service_paid = request.GET.get('PAID', None)
+            purchase.payment_service_timestamp = timezone.now()
+            purchase.payment_service_paid = request.GET.get('checkout-stamp', None)
             purchase.payment_service_method = request.GET.get('METHOD', None)
-            purchase.payment_service_return_authcode = request.GET.get('RETURN_AUTHCODE', None)
+            purchase.payment_service_return_authcode = request.GET.get('signature', None)
             purchase.save()
             purchase.set_failure()
             purchase.berth_reservation.cancel_reservation(self.request.user)
             return HttpResponseRedirect('/venepaikat/#purchase/' + purchase_code)
+
+        # From Paytrail callback
         elif request.GET.get('notification', None):
-            if not settings.PAYTRAIL_MERCHANT_ID or not settings.PAYTRAIL_MERCHANT_SECRET:
-                raise ImproperlyConfigured(_('Paytrail credentials are incorrect or missing'))
-            client = PaytrailAPIClient(merchant_id=settings.PAYTRAIL_MERCHANT_ID, merchant_secret=settings.PAYTRAIL_MERCHANT_SECRET)
-            if not client.validate_callback_data(request.GET):
+            if not self.payment_integration.payment_callback_handler(request):
                 raise ValidationError(_('Checksum failed. Invalid payment.'))
             purchase_code = request.GET.get('notification', None)
-            purchase = Purchase.objects.get(purchase_code=purchase_code)
-            purchase.berth_reservation.set_paid(True)
-            purchase.set_notification()
+            if request.GET.get('checkout-status') == 'ok':
+                LOG.debug("Succesfully returned from PayTrail with Purchase Code: " + purchase_code)
+                purchase = Purchase.objects.get(purchase_code=purchase_code)
+                purchase.payment_service_order_number = request.GET.get('ORDER_NUMBER', None)
+                purchase.payment_service_timestamp = timezone.now()
+                purchase.payment_service_paid = request.GET.get('checkout-stamp', None)
+                purchase.payment_service_method = request.GET.get('METHOD', None)
+                purchase.payment_service_return_authcode = request.GET.get('signature', None)
+                purchase.berth_reservation.set_paid(True)
+                purchase.set_success()
+                # (Equivalent with the previous E2 implementation:
+                # only succesful payments received notification from Paytrail)
+                purchase.purchase_process_notified = timezone.now()
+                purchase.finished = timezone.now()
+                purchase.save()
+
+            else:
+                purchase = Purchase.objects.get(purchase_code=purchase_code)
+                purchase.payment_service_order_number = request.GET.get('ORDER_NUMBER', None)
+                purchase.payment_service_timestamp = timezone.now()
+                purchase.payment_service_paid = request.GET.get('checkout-stamp', None)
+                purchase.payment_service_method = request.GET.get('METHOD', None)
+                purchase.payment_service_return_authcode = request.GET.get('signature', None)
+                purchase.save()
+                purchase.set_failure()
+                purchase.berth_reservation.cancel_reservation(self.request.user)
+            # Callback url should respond with 20X
+            # https://docs.paytrail.com/#/?id=redirect-and-callback-url-parameters
             return Response({}, status=status.HTTP_200_OK)
+
         elif request.GET.get('code', None):
-            if not settings.PAYTRAIL_MERCHANT_ID or not settings.PAYTRAIL_MERCHANT_SECRET:
-                raise ImproperlyConfigured(_('Paytrail credentials are incorrect or missing'))
-            client = PaytrailAPIClient(merchant_id=settings.PAYTRAIL_MERCHANT_ID, merchant_secret=settings.PAYTRAIL_MERCHANT_SECRET)
             purchase_code = request.GET.get('code', None)
             purchase = Purchase.objects.get(purchase_code=purchase_code)
             if purchase.report_is_seen():
@@ -618,6 +633,10 @@ class PurchaseView(APIView):
 
 class RenewalView(APIView):
     permission_classes = (permissions.AllowAny,)
+
+    def __init__(self):
+        self.payment_integration = import_string(settings.BERTH_INTEGRATION_CLASS)
+
     def post(self, request, format=None):
         if(request.data.get('code')):
             code = request.data.pop('code')
@@ -677,79 +696,68 @@ class RenewalView(APIView):
             url = request.build_absolute_uri(location)
             purchase_code = hashlib.sha1(str(new_berth_reservation.reservation.created_at).encode('utf-8') + str(new_berth_reservation.pk).encode('utf-8')).hexdigest()
 
-            contact = PaytrailContact(**new_berth_reservation.get_payment_contact_data())
-            product = PaytrailProduct(**new_berth_reservation.get_payment_product_data())
-            url_set = PaytrailUrlset(success_url=url + '?success=' + purchase_code, failure_url=url + '?failure=' + purchase_code, notification_url=url + '?notification=' + purchase_code)
+            contact = new_berth_reservation.get_payment_contact_data()
+            product = new_berth_reservation.get_payment_product_data()
             purchase = Purchase.objects.create(berth_reservation=new_berth_reservation,
-                    purchase_code=purchase_code,
-                    reserver_name=new_berth_reservation.reservation.reserver_name,
-                    reserver_email_address=new_berth_reservation.reservation.reserver_email_address,
-                    reserver_phone_number=new_berth_reservation.reservation.reserver_phone_number,
-                    reserver_address_street=new_berth_reservation.reservation.reserver_address_street,
-                    reserver_address_zip=new_berth_reservation.reservation.reserver_address_zip,
-                    reserver_address_city=new_berth_reservation.reservation.reserver_address_city,
-                    vat_percent=product.get_data()['vat'],
-                    price_vat=product.get_data()['price'],
-                    product_name=product.get_data()['title'])
-            payment = PaytrailPaymentExtended(
-                        service='VARAUS',
-                        product='VENEPAIKKA',
-                        product_type=product.get_data()['berth_type'],
-                        order_number=purchase.pk,
-                        contact=contact,
-                        urlset=url_set
-                        )
-            payment.add_product(product)
-            query_string = PaytrailArguments(
-                merchant_auth_hash=settings.PAYTRAIL_MERCHANT_SECRET,
-                merchant_id=settings.PAYTRAIL_MERCHANT_ID,
-                url_success=url + '?success=' + purchase_code,
-                url_cancel=url + '?failure=' + purchase_code,
-                url_notify=url + '?notification=' + purchase_code,
-                order_number=payment.get_data()['orderNumber'],
-                params_in=(
-                    'MERCHANT_ID,'
-                    'URL_SUCCESS,'
-                    'URL_CANCEL,'
-                    'URL_NOTIFY,'
-                    'ORDER_NUMBER,'
-                    'PARAMS_IN,'
-                    'PARAMS_OUT,'
-                    'PAYMENT_METHODS,'
-                    'ITEM_TITLE[0],'
-                    'ITEM_ID[0],'
-                    'ITEM_QUANTITY[0],'
-                    'ITEM_UNIT_PRICE[0],'
-                    'ITEM_VAT_PERCENT[0],'
-                    'ITEM_DISCOUNT_PERCENT[0],'
-                    'ITEM_TYPE[0],'
-                    'PAYER_PERSON_PHONE,'
-                    'PAYER_PERSON_EMAIL,'
-                    'PAYER_PERSON_FIRSTNAME,'
-                    'PAYER_PERSON_LASTNAME,'
-                    'PAYER_PERSON_ADDR_STREET,'
-                    'PAYER_PERSON_ADDR_POSTAL_CODE,'
-                    'PAYER_PERSON_ADDR_TOWN'
-                    ),
-                params_out='PAYMENT_ID,TIMESTAMP,STATUS',
-                payment_methods='1,2,3,5,6,10,50,51,52,61',
-                item_title=product.get_data()['title'],
-                item_id=product.get_data()['code'],
-                item_quantity=product.get_data()['amount'],
-                item_unit_price=product.get_data()['price'],
-                item_vat_percent=product.get_data()['vat'],
-                item_discount_percent=product.get_data()['discount'],
-                item_type=product.get_data()['type'],
-                payer_person_phone=contact.get_data()['mobile'],
-                payer_person_email=contact.get_data()['email'],
-                payer_person_firstname=contact.get_data()['firstName'],
-                payer_parson_lastname=contact.get_data()['lastName'],
-                payer_person_addr_street=contact.get_data()['address']['street'],
-                payer_person_add_postal_code=contact.get_data()['address']['postalCode'],
-                payer_person_addr_town=contact.get_data()['address']['postalOffice'],
+                purchase_code=purchase_code,
+                reserver_name=new_berth_reservation.reservation.reserver_name,
+                reserver_email_address=new_berth_reservation.reservation.reserver_email_address,
+                reserver_phone_number=new_berth_reservation.reservation.reserver_phone_number,
+                reserver_address_street=new_berth_reservation.reservation.reserver_address_street,
+                reserver_address_zip=new_berth_reservation.reservation.reserver_address_zip,
+                reserver_address_city=new_berth_reservation.reservation.reserver_address_city,
+                vat_percent=product["vat"],
+                price_vat=product["price"],
+                product_name=product["title"]
             )
 
-            return Response({'query_string': query_string.get_data()}, status=status.HTTP_200_OK)
+            paytrail_redirect_urls = {
+                'success': url + '?success=' + purchase_code,
+                'cancel': url + '?failure=' + purchase_code,
+            }
+
+            paytrail_callback_urls = {
+                'success': url + '?notification=' + purchase_code,
+                'cancel': url + '?notification=' + purchase_code,
+            }
+
+            paytrail_items = [{
+                # payment_methods='1,2,3,5,6,10,50,51,52,61',
+                'description': product['title'],
+                'productCode': product['product_id'],
+                'units': product['amount'],
+                'unitPrice': product['price'],
+                'vatPercentage': product['vat'],
+                'product_type': product['berth_type'],
+            }]
+
+            paytrail_customer = {
+                'phone': contact['mobile'],
+                'email': contact['email'],
+                'firstName': contact['first_name'],
+                'lastName': contact['last_name'],
+            }
+
+            paytrail_address = {
+                'streetAddress': contact['street'],
+                'postalCode': contact['postal_code'],
+                'city': contact['postal_office'],
+                'country': 'FI',
+            }
+
+            paytrail_data = PaytrailArguments(
+                purchase,
+                items=paytrail_items,
+                customer=paytrail_customer,
+                invoicingAddress=paytrail_address,
+                redirectUrls=paytrail_redirect_urls,
+                callbackUrls=paytrail_callback_urls,
+            )
+            paytrail_query = paytrail_data.get_payment_data()
+
+            url = self.payment_integration(payment_data=paytrail_query).payment_post()
+            return Response(url, status=status.HTTP_200_OK)
+
         elif request.data.get('reservation_id'):
             if not request.user.is_authenticated() or not request.user.is_staff:
                 raise PermissionDenied(_('This API is only for authenticated users'))

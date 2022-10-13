@@ -1,7 +1,4 @@
 {
-  "python.pythonPath": "/usr/local/bin/python3",
-  "telemetry.enableCrashReporter": false,
-  "telemetry.enableTelemetry": false,
   "git.autofetch": true,
   "git.autoStash": true,
   "git.fetchOnPull": true,
@@ -13,8 +10,6 @@
   "zenMode.fullScreen": false,
   "gitlens.codeLens.enabled": false,
   "gitlens.currentLine.enabled": false,
-  "gitlens.views.repositories.location": "scm",
-  "gitlens.views.lineHistory.location": "scm",
   "[python]": {
     "editor.tabSize": 4
   }
