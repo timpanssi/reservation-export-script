@@ -3,10 +3,12 @@ __pycache__
 db.sqlite3
 *.mo
 *.sqlite
+*.sql
 media/
 .django_secret
 /local_settings.py
 /venv*
+.venv
 /.idea
 .coverage
 htmlcov

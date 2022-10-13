@@ -63,9 +63,7 @@ if getattr(settings, 'RESPA_BERTH_ENABLED', False):
 
 
 if settings.DEBUG:
-    import debug_toolbar
     urlpatterns = [
         url(r'test/availability$', testing_views.testing_view),
-        url(r'^__debug__/', include(debug_toolbar.urls)),
     ] + urlpatterns
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

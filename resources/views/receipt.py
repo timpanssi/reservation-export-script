@@ -5,7 +5,7 @@ from django.template.loader import get_template
 from django.utils.translation import ugettext_lazy as _
 from xhtml2pdf import pisa
 
-from respa_payments.integrations.paytrail_e2_utils import generate_order_number
+from respa_payments.integrations.paytrail_utils import generate_order_number
 from respa_payments.models import Order
 
 

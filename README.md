@@ -28,8 +28,8 @@ FAQ
 ### Why is it called Respa?
 Short for "RESurssiPAlvelu" i.e. Resource Service.
 
-Visual Studio Code Remote Container Development Environment
------------------------------------------------------------
+Setup development environment for Visual Studio Code Remote Container
+---------------------------------------------------------------------
 
 Install Remote Containers support in Visual Studio Code with these instructions:
 
@@ -54,6 +54,18 @@ Here's some extra commands you may need:
 
 * Install hstore extension (inside container) `echo "create extension hstore;" | python3 manage.py dbshell`
 * Import database dump (outside container) `cat <name_of_the_sanitized_respa_dump>.sql | docker exec -i respa-db psql -U respa -d respa`
+
+Setup development environment for Visual Studio Code with Podman + Toolbox
+--------------------------------------------------------------------------
+
+* Build image tailored for Toolbox: `podman build . -f Containerfile -t varaukset.hameenlinna.fi/env/respa:latest`.
+* Create a toolbox container of the image: `toolbox create --image varaukset.hameenlinna.fi/env/respa:latest hameenlinna_respa`.
+* Launch vscode installed on your host in the toolbox container: `toolbox run --container hameenlinna_respa /var/run/host/bin/code`.
+* Create and activate virtual environment: `python -m venv .venv; source .venv/bin/activate`.
+* Install dependencies: `pip install -r requirements.txt`.
+* Start database service: `podman-compose start postgresql`.
+* Install hstore extension: `echo "create extension hstore;" | python3 manage.py dbshell`
+* Import database dump: `cat <name_of_the_sanitized_respa_dump>.sql | python3 manage.py dbshell`
 
 Creating sanitized database dump
 --------------------------------

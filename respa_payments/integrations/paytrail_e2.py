@@ -6,7 +6,7 @@ from django.utils.translation import ugettext_lazy as _
 from django.core.exceptions import ValidationError
 from respa_payments.payments import PaymentIntegration
 from respa_payments import settings, models
-from respa_payments.integrations.paytrail_e2_utils import generate_order_number, unicode_to_paytrail
+from respa_payments.integrations.paytrail_utils import generate_order_number, unicode_to_paytrail
 
 
 class PaytrailE2Integration(PaymentIntegration):
@@ -41,8 +41,8 @@ class PaytrailE2Integration(PaymentIntegration):
             'PAYER_PERSON_ADDR_POSTAL_CODE,'
             'PAYER_PERSON_ADDR_TOWN')
 
-    def construct_order_post(self, order_dict):
-        super(PaytrailE2Integration, self).construct_order_post(order_dict)
+    def order_post_handler(self, order_dict):
+        super(PaytrailE2Integration, self).order_post_handler(order_dict)
         order = models.Order.objects.get(pk=order_dict.get('id'))
         resource_name = order.sku.duration_slot.resource.name
         data = {
@@ -101,8 +101,8 @@ class PaytrailE2Integration(PaymentIntegration):
         query_string = urllib.parse.urlencode(data, doseq=True)
         return {'redirect_url': self.api_url + '?' + query_string}
 
-    def construct_payment_callback(self):
-        callback = super(PaytrailE2Integration, self).construct_payment_callback()
+    def payment_callback_handler(self):
+        callback = super(PaytrailE2Integration, self).payment_callback_handler()
         status = self.request.GET.get('STATUS', None)
         callback_data = {
             **callback,
