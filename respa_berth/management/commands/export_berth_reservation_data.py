@@ -19,16 +19,29 @@ class Command(BaseCommand):
             csv_writer = csv.writer(csvfile)
 
             # CSV header row
-            csv_writer.writerow(['Timestamp', 'Reserver name', 'Reserver email address', 'Reserver phone number',
-                                  'Reserver address street','Reserver address zip', 'Reserver address city',
-                                    'Product name', 'Is paid', 'Time of payment', 'Key returned', 'Time of key returned',
-                                    'Resource', 'Price', 'Berth type', 'Reserving staff member', 'Is deleted' ])
+            csv_writer.writerow([
+                                'Timestamp',
+
+                                'Purchase reservation', 'Purchase code', 'Purchase reserver name', 'Purchase reserver email',
+                                'Purchase reserver phone','Purchase reserver address street', 'Purchase reserver address zip',
+                                'Purchase reserver address city', 'Purchase price vat', 'Purchase price vat percent',
+                                'Purchase product name','Purchase payment service order no.', 'Purchase payment service paid',
+                                'Purchase payment service method', 'Purchase finished',
+
+                                'Reservation ID', 'Reservation berth', 'Reservation state updated at', 'Reservation reserver ssn',
+                                'Reservation is paid', 'Reservation is paid at', 'Reservation key returned',
+                                'Reservation key returned at', 'Reservation key return notification sent at',
+                                'Reservation parent',
+
+                                'Berth ID', 'Berth width cm', 'Berth depth cm', 'Berth length cm', 'Berth price',
+                                'Berth type','Berth is disabled', 'Berth reserving staff member', 'Berth is deleted',
+                                     ])
 
             timestamp = timezone.now()
             adjusted_timestamp = timestamp + timedelta(hours=timezone_adjustment)
             formatted_timestamp = adjusted_timestamp.strftime('%Y-%m-%d %H:%M:%S')
 
-            def safe_getattr(obj, attr, default='Empty'):
+            def safe_getattr(obj, attr, default=''):
                 try:
                     for part in attr.split('.'):
                         obj = getattr(obj, part)
@@ -38,45 +51,82 @@ class Command(BaseCommand):
 
             # Iterate over the reservations and write data to the CSV file
             for reservation in reservations:
-                reserver_name = safe_getattr(reservation, 'purchase.reserver_name')
-                reserver_email_address = safe_getattr(reservation, 'purchase.reserver_email_address')
-                reserver_phone_number = safe_getattr(reservation, 'purchase.reserver_phone_number')
-                reserver_address_street = safe_getattr(reservation, 'purchase.reserver_address_street')
-                reserver_address_zip = safe_getattr(reservation, 'purchase.reserver_address_zip')
-                reserver_address_city = safe_getattr(reservation, 'purchase.reserver_address_city')
-                product_name = safe_getattr(reservation, 'purchase.product_name')
 
-                is_paid = safe_getattr(reservation, 'is_paid')
-                is_paid_at = safe_getattr(reservation, 'is_paid_at')
-                key_returned = safe_getattr(reservation, 'key_returned')
-                key_returned_at = safe_getattr(reservation, 'key_returned_at')
+                purchase_reservation = safe_getattr(reservation, 'purchase.berth_reservation')
+                purchase_code = safe_getattr(reservation, 'purchase.purchase_code')
+                purchase_reserver_name = safe_getattr(reservation, 'purchase.reserver_name')
+                purchase_reserver_email_address = safe_getattr(reservation, 'purchase.reserver_email_address')
+                purchase_reserver_phone_number = safe_getattr(reservation, 'purchase.reserver_phone_number')
+                purchase_reserver_address_street = safe_getattr(reservation, 'purchase.reserver_address_street')
+                purchase_reserver_address_zip = safe_getattr(reservation, 'purchase.reserver_address_zip')
+                purchase_reserver_address_city = safe_getattr(reservation, 'purchase.reserver_address_city')
+                purchase_price_vat = safe_getattr(reservation, 'purchase.price_vat')
+                purchase_vat_percent = safe_getattr(reservation,'purchase.vat_percent')
+                purchase_product_name = safe_getattr(reservation, 'purchase.product_name')
+                purchase_payment_service_order_number = safe_getattr(reservation, 'purchase.payment_service_order_number')
+                purchase_payment_service_paid = safe_getattr(reservation, 'purchase.payment_service_paid')
+                purchase_payment_service_method = safe_getattr(reservation, 'purchase.payment_service_method')
+                purchase_finished = safe_getattr(reservation, 'purchase.finished')
 
-                resource = safe_getattr(reservation, 'berth.resource')
-                price = safe_getattr(reservation, 'berth.price')
+                reservation_id = safe_getattr(reservation, 'reservation')
+                reservation_berth = safe_getattr(reservation, 'berth')
+                reservation_state_updated_at = safe_getattr(reservation,'state_updated_at')
+                reservation_reserver_ssn = safe_getattr(reservation, 'reserver_ssn')
+                reservation_is_paid = safe_getattr(reservation, 'is_paid')
+                reservation_is_paid_at = safe_getattr(reservation, 'is_paid_at')
+                reservation_key_returned = safe_getattr(reservation, 'key_returned')
+                reservation_key_returned_at = safe_getattr(reservation, 'key_returned_at')
+                reservation_key_return_notification_sent_at = safe_getattr(reservation, 'key_return_notification_sent_at')
+                reservation_parent = safe_getattr(reservation, 'parent')
+
+                berth_id = safe_getattr(reservation, 'berth.resource')
+                berth_width_cm = safe_getattr(reservation, 'berth.width_cm')
+                berth_depth_cm = safe_getattr(reservation, 'berth.depth_cm')
+                berth_length_cm = safe_getattr(reservation, 'berth.length_cm')
+                berth_price = safe_getattr(reservation, 'berth.price')
                 berth_type = safe_getattr(reservation, 'berth.type')
-                reserving_staff_member = safe_getattr(reservation, 'berth.reserving_staff_member')
-                is_deleted = safe_getattr(reservation, 'berth.is_deleted')
+                berth_is_disabled = safe_getattr(reservation, 'berth.is_disabled')
+                berth_reserving_staff_member = safe_getattr(reservation, 'berth.reserving_staff_member')
+                berth_is_deleted = safe_getattr(reservation, 'berth.is_deleted')
 
                 csv_writer.writerow([
                     formatted_timestamp,
 
-                    reserver_name,
-                    reserver_email_address,
-                    reserver_phone_number,
-                    reserver_address_street,
-                    reserver_address_zip,
-                    reserver_address_city,
-                    product_name,
+                    purchase_reservation,
+                    purchase_code,
+                    purchase_reserver_name,
+                    purchase_reserver_email_address,
+                    purchase_reserver_phone_number,
+                    purchase_reserver_address_street,
+                    purchase_reserver_address_zip,
+                    purchase_reserver_address_city,
+                    purchase_price_vat,
+                    purchase_vat_percent,
+                    purchase_product_name,
+                    purchase_payment_service_order_number,
+                    purchase_payment_service_paid,
+                    purchase_payment_service_method,
+                    purchase_finished,
 
-                    is_paid,
-                    is_paid_at,
-                    key_returned,
-                    key_returned_at,
+                    reservation_id,
+                    reservation_berth,
+                    reservation_state_updated_at,
+                    reservation_reserver_ssn,
+                    reservation_is_paid,
+                    reservation_is_paid_at,
+                    reservation_key_returned,
+                    reservation_key_returned_at,
+                    reservation_key_return_notification_sent_at,
+                    reservation_parent,
 
-                    resource,
-                    price,
+                    berth_id,
+                    berth_width_cm,
+                    berth_depth_cm,
+                    berth_length_cm,
+                    berth_price,
                     berth_type,
-                    reserving_staff_member,
-                    is_deleted
+                    berth_is_disabled,
+                    berth_reserving_staff_member,
+                    berth_is_deleted,
                 ])
 
