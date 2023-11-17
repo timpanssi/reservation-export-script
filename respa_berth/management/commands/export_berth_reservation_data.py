@@ -5,6 +5,7 @@ from datetime import timedelta
 from respa_berth.models.berth import Berth
 from respa_berth.models.berth_reservation import BerthReservation
 from respa_berth.models.purchase import Purchase
+from resources.models.resource import Resource
 
 class Command(BaseCommand):
     help = 'Export reservations and their details to a CSV file'
@@ -22,18 +23,19 @@ class Command(BaseCommand):
             csv_writer.writerow([
                                 'Timestamp',
 
-                                'Purchase reservation', 'Purchase code', 'Purchase reserver name', 'Purchase reserver email',
-                                'Purchase reserver phone','Purchase reserver address street', 'Purchase reserver address zip',
+                                'Resource ID',
+
+                                'Purchase code', 'Purchase reserver identity code', 'Purchase reserver company', 'Purchase reserver name', 'Purchase reserver email',
+                                'Purchase reserver phone', 'Purchase reserver address street', 'Purchase reserver address zip',
                                 'Purchase reserver address city', 'Purchase price vat', 'Purchase price vat percent',
                                 'Purchase product name','Purchase payment service order no.', 'Purchase payment service paid',
                                 'Purchase payment service method', 'Purchase finished',
 
-                                'Reservation ID', 'Reservation berth', 'Reservation state updated at', 'Reservation reserver ssn',
+                                'Reservation state updated at', 'Reservation reserver ssn',
                                 'Reservation is paid', 'Reservation is paid at', 'Reservation key returned',
                                 'Reservation key returned at', 'Reservation key return notification sent at',
-                                'Reservation parent',
 
-                                'Berth ID', 'Berth width cm', 'Berth depth cm', 'Berth length cm', 'Berth price',
+                                'Berth width cm', 'Berth depth cm', 'Berth length cm', 'Berth price',
                                 'Berth type','Berth is disabled', 'Berth reserving staff member', 'Berth is deleted',
                                      ])
 
@@ -49,11 +51,16 @@ class Command(BaseCommand):
                 except:
                     return default
 
+
+
             # Iterate over the reservations and write data to the CSV file
             for reservation in reservations:
 
-                purchase_reservation = safe_getattr(reservation, 'purchase.berth_reservation')
+                resource_id = safe_getattr(reservation, 'berth.resource.pk')
+
                 purchase_code = safe_getattr(reservation, 'purchase.purchase_code')
+                purchase_reserver_id = safe_getattr(reservation, 'reservation.resource.reserver_id')
+                purchase_reserver_company = safe_getattr(reservation, 'reservation.resource.company')
                 purchase_reserver_name = safe_getattr(reservation, 'purchase.reserver_name')
                 purchase_reserver_email_address = safe_getattr(reservation, 'purchase.reserver_email_address')
                 purchase_reserver_phone_number = safe_getattr(reservation, 'purchase.reserver_phone_number')
@@ -68,8 +75,6 @@ class Command(BaseCommand):
                 purchase_payment_service_method = safe_getattr(reservation, 'purchase.payment_service_method')
                 purchase_finished = safe_getattr(reservation, 'purchase.finished')
 
-                reservation_id = safe_getattr(reservation, 'reservation')
-                reservation_berth = safe_getattr(reservation, 'berth')
                 reservation_state_updated_at = safe_getattr(reservation,'state_updated_at')
                 reservation_reserver_ssn = safe_getattr(reservation, 'reserver_ssn')
                 reservation_is_paid = safe_getattr(reservation, 'is_paid')
@@ -77,9 +82,7 @@ class Command(BaseCommand):
                 reservation_key_returned = safe_getattr(reservation, 'key_returned')
                 reservation_key_returned_at = safe_getattr(reservation, 'key_returned_at')
                 reservation_key_return_notification_sent_at = safe_getattr(reservation, 'key_return_notification_sent_at')
-                reservation_parent = safe_getattr(reservation, 'parent')
 
-                berth_id = safe_getattr(reservation, 'berth.resource')
                 berth_width_cm = safe_getattr(reservation, 'berth.width_cm')
                 berth_depth_cm = safe_getattr(reservation, 'berth.depth_cm')
                 berth_length_cm = safe_getattr(reservation, 'berth.length_cm')
@@ -92,8 +95,11 @@ class Command(BaseCommand):
                 csv_writer.writerow([
                     formatted_timestamp,
 
-                    purchase_reservation,
+                    resource_id,
+
                     purchase_code,
+                    purchase_reserver_id,
+                    purchase_reserver_company,
                     purchase_reserver_name,
                     purchase_reserver_email_address,
                     purchase_reserver_phone_number,
@@ -108,8 +114,6 @@ class Command(BaseCommand):
                     purchase_payment_service_method,
                     purchase_finished,
 
-                    reservation_id,
-                    reservation_berth,
                     reservation_state_updated_at,
                     reservation_reserver_ssn,
                     reservation_is_paid,
@@ -117,9 +121,7 @@ class Command(BaseCommand):
                     reservation_key_returned,
                     reservation_key_returned_at,
                     reservation_key_return_notification_sent_at,
-                    reservation_parent,
 
-                    berth_id,
                     berth_width_cm,
                     berth_depth_cm,
                     berth_length_cm,
