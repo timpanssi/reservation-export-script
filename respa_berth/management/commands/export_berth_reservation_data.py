@@ -23,7 +23,7 @@ class Command(BaseCommand):
             csv_writer.writerow([
                                 'Timestamp',
 
-                                'Resource ID', 'Resource name', 'Resource description', 'Resource location', 'Resource reservation info',
+                                'Resource ID', 'Resource external ID', 'Resource name', 'Resource description', 'Resource location', 'Resource reservation info',
 
 
                                 'Purchase code', 'Purchase reserver identity code', 'Purchase reserver company', 'Purchase reserver name', 'Purchase reserver email',
@@ -59,6 +59,7 @@ class Command(BaseCommand):
             for reservation in reservations:
 
                 resource_id = safe_getattr(reservation, 'berth.resource.pk')
+                reservation_external_id = safe_getattr(reservation, 'reservation.origin_id')
 
                 resource_name = safe_getattr(reservation, 'berth.resource.name')
                 resource_description = safe_getattr(reservation, 'berth.resource.description')
@@ -105,6 +106,7 @@ class Command(BaseCommand):
                     formatted_timestamp,
 
                     resource_id,
+                    reservation_external_id,
 
                     resource_name,
                     resource_description,
