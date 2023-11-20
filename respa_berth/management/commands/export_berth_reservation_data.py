@@ -23,7 +23,8 @@ class Command(BaseCommand):
             csv_writer.writerow([
                                 'Timestamp',
 
-                                'Resource ID',
+                                'Resource ID', 'Resource name', 'Resource description', 'Resource location', 'Resource reservation info',
+
 
                                 'Purchase code', 'Purchase reserver identity code', 'Purchase reserver company', 'Purchase reserver name', 'Purchase reserver email',
                                 'Purchase reserver phone', 'Purchase reserver address street', 'Purchase reserver address zip',
@@ -31,6 +32,7 @@ class Command(BaseCommand):
                                 'Purchase product name','Purchase payment service order no.', 'Purchase payment service paid',
                                 'Purchase payment service method', 'Purchase finished',
 
+                                'Reservation begins', 'Reservation ends',
                                 'Reservation state updated at', 'Reservation reserver ssn',
                                 'Reservation is paid', 'Reservation is paid at', 'Reservation key returned',
                                 'Reservation key returned at', 'Reservation key return notification sent at',
@@ -58,9 +60,14 @@ class Command(BaseCommand):
 
                 resource_id = safe_getattr(reservation, 'berth.resource.pk')
 
+                resource_name = safe_getattr(reservation, 'berth.resource.name')
+                resource_description = safe_getattr(reservation, 'berth.resource.description')
+                resource_location = safe_getattr(reservation, 'berth.resource.location')
+                resource_reservation_info = safe_getattr(reservation, 'berth.resource.reservation_info')
+
                 purchase_code = safe_getattr(reservation, 'purchase.purchase_code')
-                purchase_reserver_id = safe_getattr(reservation, 'reservation.resource.reserver_id')
-                purchase_reserver_company = safe_getattr(reservation, 'reservation.resource.company')
+                purchase_reserver_id = safe_getattr(reservation, 'reservation.reserver_id')
+                purchase_reserver_company = safe_getattr(reservation, 'reservation.company')
                 purchase_reserver_name = safe_getattr(reservation, 'purchase.reserver_name')
                 purchase_reserver_email_address = safe_getattr(reservation, 'purchase.reserver_email_address')
                 purchase_reserver_phone_number = safe_getattr(reservation, 'purchase.reserver_phone_number')
@@ -75,6 +82,8 @@ class Command(BaseCommand):
                 purchase_payment_service_method = safe_getattr(reservation, 'purchase.payment_service_method')
                 purchase_finished = safe_getattr(reservation, 'purchase.finished')
 
+                resource_begin = safe_getattr(reservation, 'reservation.begin')
+                resource_end = safe_getattr(reservation, 'reservation.end')
                 reservation_state_updated_at = safe_getattr(reservation,'state_updated_at')
                 reservation_reserver_ssn = safe_getattr(reservation, 'reserver_ssn')
                 reservation_is_paid = safe_getattr(reservation, 'is_paid')
@@ -97,6 +106,11 @@ class Command(BaseCommand):
 
                     resource_id,
 
+                    resource_name,
+                    resource_description,
+                    resource_location,
+                    resource_reservation_info,
+
                     purchase_code,
                     purchase_reserver_id,
                     purchase_reserver_company,
@@ -114,6 +128,8 @@ class Command(BaseCommand):
                     purchase_payment_service_method,
                     purchase_finished,
 
+                    resource_begin,
+                    resource_end,
                     reservation_state_updated_at,
                     reservation_reserver_ssn,
                     reservation_is_paid,
