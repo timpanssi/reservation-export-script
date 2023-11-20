@@ -1,4 +1,6 @@
 import csv
+import os
+from pathlib import Path
 from django.core.management.base import BaseCommand
 from django.utils import timezone
 from datetime import timedelta
@@ -12,11 +14,17 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
 
+        home_directory = str(Path.home())
+        csv_file_path = os.path.join(home_directory, 'exports', 'reservation_data.csv')
+
+        #Create a new dir if it doesn't already exist
+        os.makedirs(os.path.dirname(csv_file_path), exist_ok=True)
+
+        #To set correct time for timestamps when the csv was created.
         timezone_adjustment = 2
-        output_file = 'reservation_data.csv'
         reservations = BerthReservation.objects.all()
 
-        with open(output_file, 'w', newline='') as csvfile:
+        with open(csv_file_path, 'w', newline='') as csvfile:
             csv_writer = csv.writer(csvfile)
 
             # CSV header row
@@ -24,7 +32,6 @@ class Command(BaseCommand):
                                 'Timestamp',
 
                                 'Resource ID', 'Resource external ID', 'Resource name', 'Resource description', 'Resource location', 'Resource reservation info',
-
 
                                 'Purchase code', 'Purchase reserver identity code', 'Purchase reserver company', 'Purchase reserver name', 'Purchase reserver email',
                                 'Purchase reserver phone', 'Purchase reserver address street', 'Purchase reserver address zip',
