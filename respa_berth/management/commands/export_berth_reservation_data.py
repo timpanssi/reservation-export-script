@@ -1,5 +1,6 @@
 import csv
 import os
+import datetime
 from pathlib import Path
 from django.core.management.base import BaseCommand
 from django.utils import timezone
@@ -14,10 +15,12 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
 
-        home_directory = str(Path.home())
-        csv_file_path = os.path.join(home_directory, 'exports', 'reservation_data.csv')
+        home_directory = os.path.expanduser('~')
+        current_date_for_filename = datetime.datetime.now().strftime("%Y-%m-%d")
+        file_name = '{}_reservation_data.csv'.format(current_date_for_filename)
 
         #Create a new dir if it doesn't already exist
+        csv_file_path = os.path.join(home_directory, 'exports', file_name)
         os.makedirs(os.path.dirname(csv_file_path), exist_ok=True)
 
         #To set correct time for timestamps when the csv was created.
@@ -32,6 +35,8 @@ class Command(BaseCommand):
                                 'Timestamp',
 
                                 'Resource ID', 'Resource external ID', 'Resource name', 'Resource description', 'Resource location', 'Resource reservation info',
+
+                                'Unit name', 'Unit ID', 'Unit description',
 
                                 'Purchase code', 'Purchase reserver identity code', 'Purchase reserver company', 'Purchase reserver name', 'Purchase reserver email',
                                 'Purchase reserver phone', 'Purchase reserver address street', 'Purchase reserver address zip',
@@ -72,6 +77,10 @@ class Command(BaseCommand):
                 resource_description = safe_getattr(reservation, 'berth.resource.description')
                 resource_location = safe_getattr(reservation, 'berth.resource.location')
                 resource_reservation_info = safe_getattr(reservation, 'berth.resource.reservation_info')
+
+                resource_unit_name = safe_getattr(reservation, 'berth.resource.unit.name')
+                resource_unit_id = safe_getattr(reservation, 'berth.resource.unit.id')
+                resource_unit_description = safe_getattr(reservation, 'berth.resource.unit.description')
 
                 purchase_code = safe_getattr(reservation, 'purchase.purchase_code')
                 purchase_reserver_id = safe_getattr(reservation, 'reservation.reserver_id')
@@ -119,6 +128,10 @@ class Command(BaseCommand):
                     resource_description,
                     resource_location,
                     resource_reservation_info,
+
+                    resource_unit_name,
+                    resource_unit_id,
+                    resource_unit_description,
 
                     purchase_code,
                     purchase_reserver_id,
