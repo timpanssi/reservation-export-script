@@ -34,7 +34,8 @@ class Command(BaseCommand):
             csv_writer.writerow([
                                 'Timestamp',
 
-                                'Resource ID', 'Resource external ID', 'Resource name', 'Resource description', 'Resource location', 'Resource reservation info',
+                                'Resource ID', 'Resource external ID', 'Resource name', 'Resource description',
+                                'Resource location', 'Resource reservation info', 'Resource is reservable',
 
                                 'Unit name', 'Unit ID', 'Unit description',
 
@@ -77,6 +78,7 @@ class Command(BaseCommand):
                 resource_description = safe_getattr(reservation, 'berth.resource.description')
                 resource_location = safe_getattr(reservation, 'berth.resource.location')
                 resource_reservation_info = safe_getattr(reservation, 'berth.resource.reservation_info')
+                resource_is_reservable = safe_getattr(reservation, 'berth.resource.is_reservable')
 
                 resource_unit_name = safe_getattr(reservation, 'berth.resource.unit.name')
                 resource_unit_id = safe_getattr(reservation, 'berth.resource.unit.id')
@@ -128,6 +130,7 @@ class Command(BaseCommand):
                     resource_description,
                     resource_location,
                     resource_reservation_info,
+                    resource_is_reservable,
 
                     resource_unit_name,
                     resource_unit_id,
