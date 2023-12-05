@@ -2,13 +2,13 @@ import csv
 import os
 import datetime
 from pathlib import Path
+from django.db.models import IntegerField, Case, When, Value, Subquery
+from django.db.models.functions import Cast
 from django.core.management.base import BaseCommand
 from django.utils import timezone
 from datetime import timedelta
-from respa_berth.models.berth import Berth
 from respa_berth.models.berth_reservation import BerthReservation
-from respa_berth.models.purchase import Purchase
-from resources.models.resource import Resource
+
 
 class Command(BaseCommand):
     help = 'Export reservations and their details to a CSV file'
@@ -25,7 +25,19 @@ class Command(BaseCommand):
 
         #To set correct time for timestamps when the csv was created.
         timezone_adjustment = 2
-        reservations = BerthReservation.objects.all()
+        #Remove duplicates
+        distinct_pks = BerthReservation.objects.all().distinct('berth__resource__pk').values('pk')
+        # Order by unit name, then by resource name(which is cast to integers for sorting as it has numbers in it)
+        reservations = BerthReservation.objects.filter(
+            pk__in=Subquery(distinct_pks)
+        ).annotate(
+            charfield_as_int=Case(
+                When(berth__resource__name__regex=r'^\d+$', then=Cast('berth__resource__name', IntegerField())),
+                default=Value(9999), #Those with 'numeroimaton' value should go to bottom of the list
+                output_field=IntegerField()
+            )
+        ).order_by('berth__resource__unit__name', 'charfield_as_int')
+
 
         with open(csv_file_path, 'w', newline='') as csvfile:
             csv_writer = csv.writer(csvfile)
