@@ -26,17 +26,13 @@ class Command(BaseCommand):
         #To set correct time for timestamps when the csv was created.
         timezone_adjustment = 2
         #Remove duplicates
-        distinct_pks = BerthReservation.objects.all().distinct('berth__resource__pk').values('pk')
-        # Order by unit name, then by resource name(which is cast to integers for sorting as it has numbers in it)
-        reservations = BerthReservation.objects.filter(
-            pk__in=Subquery(distinct_pks)
-        ).annotate(
+        reservations = BerthReservation.objects.annotate(
             charfield_as_int=Case(
                 When(berth__resource__name__regex=r'^\d+$', then=Cast('berth__resource__name', IntegerField())),
-                default=Value(9999), #Those with 'numeroimaton' value should go to bottom of the list
+                default=Value(9999),  # Those with non-integer value should go to the bottom of the list
                 output_field=IntegerField()
             )
-        ).order_by('berth__resource__unit__name', 'charfield_as_int')
+        ).order_by('berth__resource__unit__name', 'berth__resource__pk', 'charfield_as_int')
 
 
         with open(csv_file_path, 'w', newline='') as csvfile:
@@ -97,14 +93,14 @@ class Command(BaseCommand):
                 resource_unit_description = safe_getattr(reservation, 'berth.resource.unit.description')
 
                 purchase_code = safe_getattr(reservation, 'purchase.purchase_code')
-                purchase_reserver_id = safe_getattr(reservation, 'reservation.reserver_id')
-                purchase_reserver_company = safe_getattr(reservation, 'reservation.company')
-                purchase_reserver_name = safe_getattr(reservation, 'purchase.reserver_name')
-                purchase_reserver_email_address = safe_getattr(reservation, 'purchase.reserver_email_address')
-                purchase_reserver_phone_number = safe_getattr(reservation, 'purchase.reserver_phone_number')
-                purchase_reserver_address_street = safe_getattr(reservation, 'purchase.reserver_address_street')
-                purchase_reserver_address_zip = safe_getattr(reservation, 'purchase.reserver_address_zip')
-                purchase_reserver_address_city = safe_getattr(reservation, 'purchase.reserver_address_city')
+                reservation_reserver_id = safe_getattr(reservation, 'reservation.reserver_id')
+                reservation_reserver_company = safe_getattr(reservation, 'reservation.company')
+                reservation_reserver_name = safe_getattr(reservation, 'reservation.reserver_name')
+                reservation_reserver_email_address = safe_getattr(reservation, 'reservation.reserver_email_address')
+                reservation_reserver_phone_number = safe_getattr(reservation, 'reservation.reserver_phone_number')
+                reservation_reserver_address_street = safe_getattr(reservation, 'reservation.reserver_address_street')
+                reservation_reserver_address_zip = safe_getattr(reservation, 'reservation.reserver_address_zip')
+                reservation_reserver_address_city = safe_getattr(reservation, 'reservation.reserver_address_city')
                 purchase_price_vat = safe_getattr(reservation, 'purchase.price_vat')
                 purchase_vat_percent = safe_getattr(reservation,'purchase.vat_percent')
                 purchase_product_name = safe_getattr(reservation, 'purchase.product_name')
@@ -149,14 +145,14 @@ class Command(BaseCommand):
                     resource_unit_description,
 
                     purchase_code,
-                    purchase_reserver_id,
-                    purchase_reserver_company,
-                    purchase_reserver_name,
-                    purchase_reserver_email_address,
-                    purchase_reserver_phone_number,
-                    purchase_reserver_address_street,
-                    purchase_reserver_address_zip,
-                    purchase_reserver_address_city,
+                    reservation_reserver_id,
+                    reservation_reserver_company,
+                    reservation_reserver_name,
+                    reservation_reserver_email_address,
+                    reservation_reserver_phone_number,
+                    reservation_reserver_address_street,
+                    reservation_reserver_address_zip,
+                    reservation_reserver_address_city,
                     purchase_price_vat,
                     purchase_vat_percent,
                     purchase_product_name,
