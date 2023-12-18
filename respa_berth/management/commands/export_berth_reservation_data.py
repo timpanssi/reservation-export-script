@@ -53,7 +53,7 @@ class Command(BaseCommand):
                                 'Purchase product name','Purchase payment service order no.', 'Purchase payment service paid',
                                 'Purchase payment service method', 'Purchase finished',
 
-                                'Reservation begins', 'Reservation ends',
+                                'Reservation begins', 'Reservation ends', 'Reservation is active',
                                 'Reservation state updated at', 'Reservation reserver ssn',
                                 'Reservation is paid', 'Reservation is paid at', 'Reservation key returned',
                                 'Reservation key returned at', 'Reservation key return notification sent at',
@@ -69,8 +69,12 @@ class Command(BaseCommand):
             def safe_getattr(obj, attr, default=''):
                 try:
                     for part in attr.split('.'):
-                        obj = getattr(obj, part)
-                    return obj or default
+                        if part.endswith("()"):
+                            method_name = part[:-2]  # Remove '()' to get the method name
+                            obj = getattr(obj, method_name)()
+                        else:
+                            obj = getattr(obj, part)
+                    return obj if obj is not None else default
                 except:
                     return default
 
@@ -111,6 +115,7 @@ class Command(BaseCommand):
 
                 resource_begin = safe_getattr(reservation, 'reservation.begin')
                 resource_end = safe_getattr(reservation, 'reservation.end')
+                resource_is_active = safe_getattr(reservation, 'reservation.is_active()')
                 reservation_state_updated_at = safe_getattr(reservation,'state_updated_at')
                 reservation_reserver_ssn = safe_getattr(reservation, 'reserver_ssn')
                 reservation_is_paid = safe_getattr(reservation, 'is_paid')
@@ -163,6 +168,7 @@ class Command(BaseCommand):
 
                     resource_begin,
                     resource_end,
+                    resource_is_active,
                     reservation_state_updated_at,
                     reservation_reserver_ssn,
                     reservation_is_paid,
